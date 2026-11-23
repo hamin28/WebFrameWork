@@ -236,3 +236,25 @@ body {
     padding-bottom: max(32px, env(safe-area-inset-bottom));
   } /* 하단 안전 영역을 고려합니다. */
 } /* 모바일 설정을 마칩니다. */
+
+@media (min-width: 900px) {
+  .login-page {
+    min-height: 100dvh;
+    padding: 32px;
+    background: #f6f7f9;
+  }
+
+  .login-phone {
+    width: min(100%, 440px);
+    min-height: 620px;
+    border: 1px solid #e8eaed;
+    border-radius: 20px;
+    box-shadow: 0 18px 50px #27313d12;
+  }
+
+  .login-phone::before,
+  .login-status,
+  .login-home-indicator {
+    display: none;
+  }
+}

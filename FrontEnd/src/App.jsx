@@ -13,12 +13,13 @@ import FindPasswordPage from './pages/auth/FindPasswordPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
 import BottomNavigation from './components/layout/BottomNavigation.jsx';
 import HomePage from './pages/home/HomePage.jsx';
+import PublicHomePage from './pages/home/PublicHomePage.jsx';
 import CreateMeetingPage from './pages/meetings/CreateMeetingPage.jsx';
 import MeetingDetail from './pages/meetings/MeetingDetail.jsx';
 import MyPage from './pages/MyPage/MyPage.jsx';
 
 export default function App() {
-  const [screen, setScreen] = useState('login');
+  const [screen, setScreen] = useState('public');
   // 로그인 정보는 메모리에 보관하며 새로고침하면 초기화됩니다.
   const [loginInfo, setLoginInfo] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -41,7 +42,7 @@ export default function App() {
         // 링크의 모임이 삭제되었거나 접근할 수 없으면 홈으로 진입합니다.
       }
     }
-    setScreen('home');
+    setScreen('public');
   };
 
   useEffect(() => {
@@ -99,6 +100,18 @@ export default function App() {
     }
   };
 
+  if (screen === 'public') {
+    return (
+      <PublicHomePage
+        isLoggedIn={Boolean(loginInfo)}
+        userName={loginInfo?.name}
+        onLogin={() => setScreen('login')}
+        onProfile={() => setScreen('mypage')}
+        onExplore={() => setScreen(loginInfo ? 'home' : 'login')}
+      />
+    );
+  }
+
   // 로그인 페이지로 돌아가는 함수
   if (screen === 'findId') {
     return <FindIdPage onBack={() => setScreen('login')} />;
@@ -147,7 +160,7 @@ export default function App() {
             setLoginInfo(null);
             setFavoriteMeetings([]);
             setFavoritesError('');
-            setScreen('login');
+            setScreen('public');
           }}
         />
         <BottomNavigation

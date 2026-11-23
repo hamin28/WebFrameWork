@@ -7,8 +7,6 @@ import PhoneFrame from './components/layout/PhoneFrame.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <PhoneFrame>
-      <App />
-    </PhoneFrame>
+    <App />
   </StrictMode>,
 );

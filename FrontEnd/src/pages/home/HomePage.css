@@ -402,3 +402,139 @@
     box-shadow: 0 0 30px #2221;
   }
 }
+
+@media (min-width: 900px) {
+  .home-page {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    background: #f6f7f9;
+  }
+
+  .home-header {
+    padding: 28px 32px 8px;
+    border-bottom: 1px solid #e8eaed;
+  }
+
+  .home-location-caption {
+    font-size: 12px;
+  }
+
+  .home-location {
+    font-size: 16px;
+  }
+
+  .home-header h1 {
+    margin: 18px 0 10px;
+    font-size: clamp(22px, 2vw, 28px);
+  }
+
+  .home-categories {
+    gap: 9px;
+    padding: 10px 0 14px;
+  }
+
+  .home-categories button {
+    padding: 9px 15px;
+    font-size: 13px;
+  }
+
+  .home-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(350px, 36%);
+    gap: 20px;
+    min-height: 0;
+    margin: 0;
+    padding: 20px 32px 28px;
+    overflow: hidden;
+  }
+
+  .home-map,
+  .home-list-panel {
+    position: relative;
+    inset: auto;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    border: 1px solid #e8eaed;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 28px #2530410a;
+  }
+
+  .home-map {
+    overflow: hidden;
+  }
+
+  .home-list-panel,
+  .home-list-panel.expanded,
+  .home-list-panel.hidden {
+    height: auto;
+    max-height: none;
+    padding: 20px 22px;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .home-panel-handle,
+  .home-list-reopen {
+    display: none;
+  }
+
+  .home-list-heading {
+    padding: 0 0 18px;
+    border-bottom: 1px solid #eceef0;
+  }
+
+  .home-list-heading h2 {
+    font-size: 20px;
+  }
+
+  .home-list-heading h2 span,
+  .home-list-heading p,
+  .home-list-heading > button {
+    font-size: 13px;
+  }
+
+  .home-meeting-list {
+    flex: 1 1 auto;
+  }
+
+  .home-meeting-card {
+    gap: 15px;
+    padding: 18px 4px;
+  }
+
+  .home-meeting-image {
+    width: 96px;
+    height: 104px;
+    border-radius: 10px;
+  }
+
+  .home-meeting-info > strong {
+    font-size: 16px;
+  }
+
+  .home-meeting-meta,
+  .home-detail-line,
+  .home-meeting-members,
+  .home-empty {
+    font-size: 13px;
+  }
+
+  .home-meeting-members span {
+    font-size: 12px;
+  }
+
+  .home-toast {
+    right: 40px;
+    bottom: 40px;
+    left: auto;
+    width: min(360px, calc(100% - 80px));
+  }
+}

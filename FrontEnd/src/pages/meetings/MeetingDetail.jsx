@@ -10,7 +10,12 @@ import './MeetingDetail.css';
 function DetailIcon({ name }) {
   const paths = {
     back: <path d="m15 18-6-6 6-6" />,
-    share: <><path d="M12 15V3m0 0L7 8m5-5 5 5" /><path d="M5 12v8h14v-8" /></>,
+    share: (
+      <>
+        <path d="M12 15V3m0 0L7 8m5-5 5 5" />
+        <path d="M5 12v8h14v-8" />
+      </>
+    ),
     heart: (
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z" />
     ),
@@ -90,7 +95,11 @@ export default function MeetingDetail({
       })
       .catch((error) => {
         if (isCurrent) {
-          setNotice(error instanceof Error ? error.message : '참여 정보를 불러오지 못했어요.');
+          setNotice(
+            error instanceof Error
+              ? error.message
+              : '참여 정보를 불러오지 못했어요.',
+          );
         }
       })
       .finally(() => {
@@ -111,9 +120,13 @@ export default function MeetingDetail({
         ? await leaveMeeting(token, meeting.id)
         : await joinMeeting(token, meeting.id);
       setParticipation(result);
-      setNotice(result.joined ? '모임 참여가 완료되었어요.' : '모임 참여를 취소했어요.');
+      setNotice(
+        result.joined ? '모임 참여가 완료되었어요.' : '모임 참여를 취소했어요.',
+      );
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : '모임 참여 처리에 실패했어요.');
+      setNotice(
+        error instanceof Error ? error.message : '모임 참여 처리에 실패했어요.',
+      );
     } finally {
       setParticipationSubmitting(false);
     }
@@ -139,7 +152,8 @@ export default function MeetingDetail({
         setNotice(shareUrl.toString());
       }
     } catch (error) {
-      if (error?.name !== 'AbortError') setNotice('모임 링크를 공유하지 못했어요.');
+      if (error?.name !== 'AbortError')
+        setNotice('모임 링크를 공유하지 못했어요.');
     }
   };
 
@@ -233,8 +247,11 @@ export default function MeetingDetail({
                     <span className="meeting-detail-sr-only">참여 인원</span>
                   </dt>
                   <dd>
-                    {participation.currentMembers ?? meeting.currentMembers ?? 0} /{' '}
-                    {participation.maxMembers || meeting.maxMembers || '-'}명 참여
+                    {participation.currentMembers ??
+                      meeting.currentMembers ??
+                      0}{' '}
+                    / {participation.maxMembers || meeting.maxMembers || '-'}명
+                    참여
                   </dd>
                 </div>
               </dl>
@@ -255,7 +272,8 @@ export default function MeetingDetail({
               disabled={
                 participationLoading ||
                 participationSubmitting ||
-                ((participation.host || participation.full) && !participation.joined)
+                ((participation.host || participation.full) &&
+                  !participation.joined)
               }
               onClick={handleParticipation}>
               {participationButtonLabel}

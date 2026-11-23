@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import './MeetingMap.css';
 
@@ -37,7 +36,6 @@ export default function MeetingMap({
     onMeetingSelectRef.current = onMeetingSelect;
   }, [onLocationSelect, onSearchArea, onMeetingSelect]);
 
-
   // 1. 카카오 지도 최초 초기화
   useEffect(() => {
     if (!window.kakao?.maps) {
@@ -65,8 +63,10 @@ export default function MeetingMap({
       const sw = bounds.getSouthWest();
       const ne = bounds.getNorthEast();
       onSearchAreaRef.current?.({
-        south: sw.getLat(), west: sw.getLng(),
-        north: ne.getLat(), east: ne.getLng(),
+        south: sw.getLat(),
+        west: sw.getLng(),
+        north: ne.getLat(),
+        east: ne.getLng(),
       });
 
       // 지도 빈 곳 클릭 시 마커를 생성하지 않습니다.
@@ -85,7 +85,6 @@ export default function MeetingMap({
     };
   }, []);
 
-
   // 2. 지도 범위에 있는 모임의 마커를 생성합니다.
   // 찜에 포함된 모임만 빨간색이고, 그 외에는 파란색입니다.
   useEffect(() => {
@@ -99,12 +98,12 @@ export default function MeetingMap({
     const blueImage = new kakao.maps.MarkerImage(
       '/markers/blueMarker.png',
       new kakao.maps.Size(32, 42),
-      { offset: new kakao.maps.Point(16, 42) }
+      { offset: new kakao.maps.Point(16, 42) },
     );
     const redImage = new kakao.maps.MarkerImage(
       '/markers/redMarker.png',
       new kakao.maps.Size(32, 42),
-      { offset: new kakao.maps.Point(16, 42) }
+      { offset: new kakao.maps.Point(16, 42) },
     );
 
     const favoriteIds = new Set(favoriteMeetingIds.map(String));
@@ -132,10 +131,10 @@ export default function MeetingMap({
     meetingMarkersRef.current = newMarkers;
     return () => {
       newMarkers.forEach((marker) => marker.setMap(null));
-      if (meetingMarkersRef.current === newMarkers) meetingMarkersRef.current = [];
+      if (meetingMarkersRef.current === newMarkers)
+        meetingMarkersRef.current = [];
     };
   }, [map, meetings, favoriteMeetingIds]);
-
 
   // 3. 장소 검색
   const handleSearch = (e) => {
@@ -154,15 +153,9 @@ export default function MeetingMap({
     const ps = new window.kakao.maps.services.Places();
 
     ps.keywordSearch(keyword, (data, status) => {
-      if (
-        status ===
-        window.kakao.maps.services.Status.OK
-      ) {
+      if (status === window.kakao.maps.services.Status.OK) {
         setPlaces(data);
-      } else if (
-        status ===
-        window.kakao.maps.services.Status.ZERO_RESULT
-      ) {
+      } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
         alert('검색 결과가 존재하지 않습니다.');
         setPlaces([]);
       } else {
@@ -171,14 +164,13 @@ export default function MeetingMap({
     });
   };
 
-
   // 4. 검색 결과에서 장소 선택
   const handleSelectPlace = (place) => {
     if (!map) return;
 
     const moveLatLon = new window.kakao.maps.LatLng(
       Number(place.y),
-      Number(place.x)
+      Number(place.x),
     );
 
     // 선택한 장소로 지도 이동
@@ -207,7 +199,6 @@ export default function MeetingMap({
     });
   };
 
-
   // 5. 현재 지도 범위에서 모임 검색
   const handleSearchArea = () => {
     if (!map || searching) return;
@@ -227,15 +218,10 @@ export default function MeetingMap({
     });
   };
 
-
   return (
     <div className="map-container">
-
       {/* 장소 검색창 */}
-      <form
-        onSubmit={handleSearch}
-        className="map-search-form"
-      >
+      <form onSubmit={handleSearch} className="map-search-form">
         <input
           type="text"
           value={keyword}
@@ -244,23 +230,14 @@ export default function MeetingMap({
           className="map-search-input"
         />
 
-        <button
-          type="submit"
-          className="map-search-button"
-        >
+        <button type="submit" className="map-search-button">
           검색
         </button>
       </form>
 
-
       {/* 지도 영역 */}
       <div className="map-viewport">
-
-        <div
-          ref={mapContainerRef}
-          id="map"
-          className="map-canvas"
-        />
+        <div ref={mapContainerRef} id="map" className="map-canvas" />
 
         {/* 현재 지도에서 모임 검색 */}
         <button
@@ -268,13 +245,8 @@ export default function MeetingMap({
           className="map-area-search-button"
           onClick={handleSearchArea}
           disabled={!map || searching}
-          aria-busy={searching}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
+          aria-busy={searching}>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
               d="M20 7v5h-5M20 12a8 8 0 1 1-2.34-5.66L20 9"
               stroke="currentColor"
@@ -284,32 +256,23 @@ export default function MeetingMap({
             />
           </svg>
 
-          <span>
-            {searching
-              ? '검색 중…'
-              : '현 지도에서 검색'}
-          </span>
+          <span>{searching ? '검색 중…' : '현 지도에서 검색'}</span>
         </button>
       </div>
-
 
       {/* 선택된 장소 정보 */}
       {selectedPlace && (
         <div className="map-selection-info">
-          🎯 <strong>선택된 위치:</strong>{' '}
-          {selectedPlace.place_name} (
-          {selectedPlace.road_address_name ||
-            selectedPlace.address_name})
+          🎯 <strong>선택된 위치:</strong> {selectedPlace.place_name} (
+          {selectedPlace.road_address_name || selectedPlace.address_name})
         </div>
       )}
 
       {selectedAddress && (
         <div className="map-selection-info">
-          📍 <strong>선택한 주소:</strong>{' '}
-          {selectedAddress}
+          📍 <strong>선택한 주소:</strong> {selectedAddress}
         </div>
       )}
-
 
       {/* 장소 검색 결과 목록 */}
       {places.length > 0 && (
@@ -324,24 +287,16 @@ export default function MeetingMap({
                 key={place.id}
                 onClick={() => handleSelectPlace(place)}
                 className={`map-result-item${
-                  selectedPlace?.id === place.id
-                    ? ' is-selected'
-                    : ''
-                }`}
-              >
-                <div className="map-place-name">
-                  {place.place_name}
-                </div>
+                  selectedPlace?.id === place.id ? ' is-selected' : ''
+                }`}>
+                <div className="map-place-name">{place.place_name}</div>
 
                 <div className="map-place-address">
-                  {place.road_address_name ||
-                    place.address_name}
+                  {place.road_address_name || place.address_name}
                 </div>
 
                 {place.phone && (
-                  <div className="map-place-phone">
-                    📞 {place.phone}
-                  </div>
+                  <div className="map-place-phone">📞 {place.phone}</div>
                 )}
               </li>
             ))}

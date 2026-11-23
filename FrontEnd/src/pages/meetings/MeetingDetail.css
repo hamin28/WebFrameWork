@@ -16,6 +16,20 @@
     sans-serif;
 }
 
+@media (min-width: 900px) {
+  .meeting-detail-page {
+    width: min(100%, 960px);
+    height: 100dvh;
+    min-height: 0;
+    border-right: 1px solid #e8eaed;
+    border-left: 1px solid #e8eaed;
+  }
+
+  .meeting-detail-main {
+    overflow-y: auto;
+  }
+}
+
 .meeting-detail-page * {
   box-sizing: border-box;
 }

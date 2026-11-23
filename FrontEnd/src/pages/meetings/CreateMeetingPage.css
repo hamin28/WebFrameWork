@@ -15,6 +15,7 @@
     'Segoe UI',
     sans-serif;
 }
+
 .create-page * {
   box-sizing: border-box;
 }
@@ -472,5 +473,24 @@
     border-right: 1px solid #f0f0f0;
     border-left: 1px solid #f0f0f0;
     box-shadow: 0 0 30px #2221;
+  }
+}
+
+@media (min-width: 900px) {
+  .create-page {
+    width: min(100%, 1100px);
+    height: 100dvh;
+    min-height: 0;
+    border-right: 1px solid #e8eaed;
+    border-left: 1px solid #e8eaed;
+    box-shadow: none;
+  }
+
+  .create-header {
+    padding: 0 32px;
+  }
+
+  .create-form {
+    padding: 24px 32px 40px;
   }
 }
