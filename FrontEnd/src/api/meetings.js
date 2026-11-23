@@ -99,7 +99,9 @@ async function requestParticipation(token, meetingId, method = 'GET') {
   const result = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(
-      result?.message || result?.detail || `참여 정보를 처리하지 못했습니다. (${response.status})`,
+      result?.message ||
+        result?.detail ||
+        `참여 정보를 처리하지 못했습니다. (${response.status})`,
     );
   }
 

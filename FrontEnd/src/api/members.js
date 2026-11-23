@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 async function readError(response, fallbackMessage) {
   const body = await response.json().catch(() => null);
@@ -12,7 +13,10 @@ export async function getMyProfile(token) {
   });
 
   if (!response.ok) {
-    throw await readError(response, `회원 정보를 불러오지 못했습니다. (${response.status})`);
+    throw await readError(
+      response,
+      `회원 정보를 불러오지 못했습니다. (${response.status})`,
+    );
   }
 
   return response.json();
@@ -34,7 +38,10 @@ export async function updateMyProfile(token, profile) {
   });
 
   if (!response.ok) {
-    throw await readError(response, `프로필을 저장하지 못했습니다. (${response.status})`);
+    throw await readError(
+      response,
+      `프로필을 저장하지 못했습니다. (${response.status})`,
+    );
   }
 
   return response.json();

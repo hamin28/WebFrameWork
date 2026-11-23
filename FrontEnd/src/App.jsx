@@ -120,6 +120,7 @@ export default function App() {
         isLoggedIn={Boolean(loginInfo)}
         userName={loginInfo?.name}
         onLogin={() => setScreen('login')}
+        onSignup={() => setScreen('signup')}
         onProfile={() => setScreen('mypage')}
         onExplore={() => setScreen(loginInfo ? 'home' : 'login')}
         onFavorites={() => setScreen(loginInfo ? 'fav' : 'login')}
@@ -138,7 +139,7 @@ export default function App() {
   }
 
   if (screen === 'signup') {
-    return <SignupPage onBack={() => setScreen('login')} />;
+    return <SignupPage onBack={() => setScreen('public')} />;
   }
 
   if (screen === 'create' && loginInfo) {
