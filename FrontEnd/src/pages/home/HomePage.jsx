@@ -1,5 +1,6 @@
 // src/pages/home/HomePage.jsx — 지도 범위·카테고리별 모임 조회와 모임 목록 표시
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FiBell, FiClock, FiImage, FiMapPin } from 'react-icons/fi';
 import { getMeetings } from '../../api/meetings.js';
 import MeetingMap from '../../components/map/MeetingMap.jsx';
 import FavoritesSheet from '../favorites/FavoritesSheet.jsx';
@@ -15,15 +16,6 @@ const CATEGORIES = [
   '스터디',
   '기타',
 ];
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 10c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 1 1 16 0Z" />
-      <circle cx="12" cy="10" r="2.5" />
-    </svg>
-  );
-}
-
 function MeetingCard({ meeting, selected, onSelect }) {
   const placeName = meeting.placeName ?? meeting.place ?? '장소 미정';
   const startsAt = meeting.startsAt ?? meeting.date;
@@ -41,11 +33,7 @@ function MeetingCard({ meeting, selected, onSelect }) {
       className={`home-meeting-card${selected ? ' is-selected' : ''}`}
       onClick={onSelect}>
       <span className="home-meeting-image" aria-hidden="true">
-        <svg viewBox="0 0 48 48">
-          <rect x="7" y="7" width="34" height="34" rx="5" />
-          <circle cx="18" cy="18" r="3" />
-          <path d="m9 35 11-11 7 7 5-5 7 9" />
-        </svg>
+        <FiImage />
       </span>
       <span className="home-meeting-info">
         <span className="home-meeting-meta">
@@ -58,14 +46,11 @@ function MeetingCard({ meeting, selected, onSelect }) {
         </span>
         <strong>{meeting.title}</strong>
         <span className="home-detail-line">
-          <PinIcon />
+          <FiMapPin />
           {placeName}
         </span>
         <span className="home-detail-line">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
-          </svg>
+          <FiClock />
           {formattedStartsAt}
         </span>
         <span className="home-meeting-members">
@@ -223,7 +208,7 @@ export default function HomePage({
                     : '서울시 중랑구 면목동',
                 )
               }>
-              <PinIcon />
+              <FiMapPin />
               {address}
               <span className="home-chevron">⌄</span>
             </button>
@@ -235,9 +220,7 @@ export default function HomePage({
             <button
               aria-label="알림"
               onClick={() => setNotice('아직 새로운 알림이 없어요.')}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
-              </svg>
+              <FiBell />
               <i />
             </button>
           </div>

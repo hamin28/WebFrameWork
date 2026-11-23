@@ -1,6 +1,7 @@
 // src/pages/auth/LoginPage.jsx — 아이디·비밀번호 로그인 및 계정 관련 화면 이동
 
 import { useState } from 'react';
+import { FiMapPin } from 'react-icons/fi';
 import LoginInputField from '../../components/auth/LoginInputField.jsx';
 import './Auth.css';
 
@@ -86,19 +87,7 @@ export default function LoginPage({
           <div className="login-logo" aria-hidden="true">
             {/* 로고 아이콘 */}
             {/* 별도 이미지 없이 위치 핀 아이콘을 그립니다. */}
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#555"
-              strokeWidth="2"
-              strokeLinecap="round">
-              {/* 핀의 외곽선입니다. */}
-              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" />
-              {/* 핀 가운데의 작은 원입니다. */}
-              <circle cx="12" cy="10" r="3" />
-            </svg>{' '}
+            <FiMapPin />{' '}
             {/* 위치 아이콘을 마칩니다. */}
           </div>{' '}
           {/* 서비스 이름을 페이지 제목으로 표시합니다. */}
