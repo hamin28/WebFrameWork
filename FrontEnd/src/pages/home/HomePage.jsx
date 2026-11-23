@@ -114,7 +114,11 @@ export default function HomePage({
       })
       .catch((error) => {
         if (isCurrentRequest && error?.name !== 'AbortError') {
-          setMeetingsError(error instanceof Error ? error.message : '모임 목록을 불러오지 못했습니다.');
+          setMeetingsError(
+            error instanceof Error
+              ? error.message
+              : '모임 목록을 불러오지 못했습니다.',
+          );
         }
       })
       .finally(() => {
@@ -141,14 +145,21 @@ export default function HomePage({
   const meetings = useMemo(() => {
     if (!searchBounds) return [];
     return allMeetings.filter((meeting) => {
-      const matchesCategory = category === '전체' || meeting.category === category;
+      const matchesCategory =
+        category === '전체' || meeting.category === category;
       const lat = Number(meeting.latitude);
       const lng = Number(meeting.longitude);
-      const hasCoordinates = meeting.latitude != null && meeting.longitude != null
-        && Number.isFinite(lat) && Number.isFinite(lng);
-      const withinBounds = hasCoordinates
-        && lat >= searchBounds.south && lat <= searchBounds.north
-        && lng >= searchBounds.west && lng <= searchBounds.east;
+      const hasCoordinates =
+        meeting.latitude != null &&
+        meeting.longitude != null &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng);
+      const withinBounds =
+        hasCoordinates &&
+        lat >= searchBounds.south &&
+        lat <= searchBounds.north &&
+        lng >= searchBounds.west &&
+        lng <= searchBounds.east;
       return matchesCategory && withinBounds;
     });
   }, [allMeetings, category, searchBounds]);

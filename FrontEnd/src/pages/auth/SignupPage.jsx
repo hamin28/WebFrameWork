@@ -1,6 +1,7 @@
 // src/pages/auth/SignupPage.jsx — 회원 정보 입력과 회원가입 요청 처리
 
 import { useState } from 'react';
+import { FiArrowLeft, FiSearch } from 'react-icons/fi';
 import './Auth.css';
 import './SignupPage.css';
 
@@ -275,17 +276,7 @@ export default function SignupPage({ onBack }) {
             type="button"
             onClick={onBack}
             aria-label="로그인 화면으로 돌아가기">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              aria-hidden="true">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <FiArrowLeft aria-hidden="true" />
           </button>
 
           {/* 제목 */}
@@ -391,18 +382,7 @@ export default function SignupPage({ onBack }) {
                     )
                   }>
                   {/* 돋보기 아이콘 */}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    aria-hidden="true">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
-                  </svg>
+                  <FiSearch aria-hidden="true" />
                 </button>
               </div>
               <div id="signup-address-help">

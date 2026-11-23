@@ -27,7 +27,9 @@ export default function App() {
   const [detailReturnScreen, setDetailReturnScreen] = useState('home');
   const [favoriteMeetings, setFavoriteMeetings] = useState([]);
   const [favoritesError, setFavoritesError] = useState('');
-  const sharedMeetingId = new URLSearchParams(window.location.search).get('meetingId');
+  const sharedMeetingId = new URLSearchParams(window.location.search).get(
+    'meetingId',
+  );
 
   const handleLoginSuccess = async (info) => {
     setLoginInfo(info);
@@ -42,7 +44,7 @@ export default function App() {
         // 링크의 모임이 삭제되었거나 접근할 수 없으면 홈으로 진입합니다.
       }
     }
-    setScreen('public');
+    setScreen('home');
   };
 
   useEffect(() => {
@@ -59,7 +61,11 @@ export default function App() {
       })
       .catch((error) => {
         if (isCurrent) {
-          setFavoritesError(error instanceof Error ? error.message : '찜 목록을 불러오지 못했어요.');
+          setFavoritesError(
+            error instanceof Error
+              ? error.message
+              : '찜 목록을 불러오지 못했어요.',
+          );
         }
       });
 
@@ -79,22 +85,30 @@ export default function App() {
 
   const toggleFavorite = async (meeting) => {
     const token = loginInfo?.token;
-    if (!token || meeting?.id == null) throw new Error('로그인 정보 또는 모임 정보가 없습니다.');
+    if (!token || meeting?.id == null)
+      throw new Error('로그인 정보 또는 모임 정보가 없습니다.');
 
-    const alreadySaved = favoriteMeetings.some((saved) => saved.id === meeting.id);
+    const alreadySaved = favoriteMeetings.some(
+      (saved) => saved.id === meeting.id,
+    );
     setFavoritesError('');
     try {
       if (alreadySaved) {
         await removeFavoriteMeeting(token, meeting.id);
-        setFavoriteMeetings((current) => current.filter((saved) => saved.id !== meeting.id));
+        setFavoriteMeetings((current) =>
+          current.filter((saved) => saved.id !== meeting.id),
+        );
       } else {
         await addFavoriteMeeting(token, meeting.id);
-        setFavoriteMeetings((current) => current.some((saved) => saved.id === meeting.id)
-          ? current
-          : [meeting, ...current]);
+        setFavoriteMeetings((current) =>
+          current.some((saved) => saved.id === meeting.id)
+            ? current
+            : [meeting, ...current],
+        );
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : '찜 상태를 저장하지 못했어요.';
+      const message =
+        error instanceof Error ? error.message : '찜 상태를 저장하지 못했어요.';
       setFavoritesError(message);
       throw error;
     }
@@ -108,6 +122,8 @@ export default function App() {
         onLogin={() => setScreen('login')}
         onProfile={() => setScreen('mypage')}
         onExplore={() => setScreen(loginInfo ? 'home' : 'login')}
+        onFavorites={() => setScreen(loginInfo ? 'fav' : 'login')}
+        onCreate={() => setScreen(loginInfo ? 'create' : 'login')}
       />
     );
   }
@@ -155,7 +171,9 @@ export default function App() {
             setDetailReturnScreen('mypage');
             setScreen('detail');
           }}
-          onNameChange={(name) => setLoginInfo((current) => ({ ...current, name }))}
+          onNameChange={(name) =>
+            setLoginInfo((current) => ({ ...current, name }))
+          }
           onLogout={() => {
             setLoginInfo(null);
             setFavoriteMeetings([]);
@@ -177,7 +195,9 @@ export default function App() {
         <MeetingDetail
           meeting={selectedMeeting}
           token={loginInfo.token}
-          isFavorite={favoriteMeetings.some((meeting) => meeting.id === selectedMeeting?.id)}
+          isFavorite={favoriteMeetings.some(
+            (meeting) => meeting.id === selectedMeeting?.id,
+          )}
           onToggleFavorite={() => toggleFavorite(selectedMeeting)}
           onBack={() => setScreen(detailReturnScreen)}
         />
@@ -214,6 +234,7 @@ export default function App() {
 
   return (
     <LoginPage
+      onBack={() => setScreen('public')}
       onLoginSuccess={handleLoginSuccess}
       onSignup={() => setScreen('signup')}
       onFindId={() => setScreen('findId')}

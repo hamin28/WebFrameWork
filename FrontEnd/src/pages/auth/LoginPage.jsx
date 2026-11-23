@@ -6,6 +6,7 @@ import LoginInputField from '../../components/auth/LoginInputField.jsx';
 import './Auth.css';
 
 export default function LoginPage({
+  onBack,
   onFindId,
   onFindPassword,
   onSignup,
@@ -77,6 +78,7 @@ export default function LoginPage({
     <main className="login-page">
       {/* 데스크톱에서는 원본처럼 휴대전화 형태로 표시하는 영역입니다. */}
       <section className="login-phone" aria-label="모이자 로그인">
+        <button className="login-back" type="button" onClick={onBack}>← 메인으로</button>
         <div className="login-status" aria-hidden="true">
           <span>9:41</span>
           <span>▮▮▮ · ▰</span>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { FiRefreshCw } from 'react-icons/fi';
 import './MeetingMap.css';
 
 export default function MeetingMap({
@@ -246,15 +247,7 @@ export default function MeetingMap({
           onClick={handleSearchArea}
           disabled={!map || searching}
           aria-busy={searching}>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M20 7v5h-5M20 12a8 8 0 1 1-2.34-5.66L20 9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FiRefreshCw aria-hidden="true" />
 
           <span>{searching ? '검색 중…' : '현 지도에서 검색'}</span>
         </button>

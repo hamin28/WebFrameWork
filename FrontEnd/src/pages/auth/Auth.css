@@ -43,6 +43,17 @@ body {
   background: white; /* 로그인 화면 배경입니다. */
   box-shadow: 0 25px 50px -12px #0004; /* 프레임 아래에 그림자를 표시합니다. */
 } /* 프레임 설정을 마칩니다. */
+.login-back {
+  position: absolute;
+  z-index: 1;
+  top: 16px;
+  left: 22px;
+  padding: 7px 0;
+  border: 0;
+  color: #777b83;
+  background: transparent;
+  font-size: 12px;
+}
 .login-phone::before {
   /* 휴대전화 상단 노치를 그립니다. */
   content: ''; /* 장식 요소를 생성합니다. */
@@ -80,6 +91,7 @@ body {
   border-radius: 16px;
   background: #e5e7eb;
 } /* 회색 점선 로고 상자를 그립니다. */
+.login-logo svg { width: 16px; height: 16px; color: #555; }
 .login-brand h1 {
   margin: 0;
   font-size: 24px;
