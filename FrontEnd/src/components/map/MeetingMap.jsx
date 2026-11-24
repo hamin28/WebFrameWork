@@ -41,11 +41,49 @@ export default function MeetingMap({
   useEffect(() => {
     if (!window.kakao?.maps) {
       console.error('카카오맵 SDK를 불러오지 못했습니다.');
-      return;
+      return undefined;
     }
 
     let isMounted = true;
     let mapInstance = null;
+    let resizeObserver = null;
+    let layoutFrame = null;
+    let initialFrame = null;
+    let initialSearchDone = false;
+
+    // CSS/grid 레이아웃이 확정된 후 타일 크기를 다시 계산합니다.
+    const relayoutMap = () => {
+      if (!isMounted || !mapInstance || !mapContainerRef.current) return;
+      const { width, height } = mapContainerRef.current.getBoundingClientRect();
+      if (width <= 0 || height <= 0) return;
+      mapInstance.relayout();
+    };
+
+    const scheduleRelayout = () => {
+      if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+      layoutFrame = requestAnimationFrame(() => {
+        layoutFrame = null;
+        relayoutMap();
+      });
+    };
+
+    const searchInitialBoundsOnce = () => {
+      if (!isMounted || !mapInstance || initialSearchDone || !mapContainerRef.current) return;
+      const { width, height } = mapContainerRef.current.getBoundingClientRect();
+      if (width <= 0 || height <= 0) return;
+
+      relayoutMap();
+      const bounds = mapInstance.getBounds();
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+      initialSearchDone = true;
+      onSearchAreaRef.current?.({
+        south: sw.getLat(),
+        west: sw.getLng(),
+        north: ne.getLat(),
+        east: ne.getLng(),
+      });
+    };
 
     window.kakao.maps.load(() => {
       if (!isMounted || !mapContainerRef.current) return;
@@ -59,15 +97,24 @@ export default function MeetingMap({
       mapRef.current = mapInstance;
       setMap(mapInstance);
 
-      // 초기 진입 때 현재 지도 영역의 모임을 한 번 조회합니다.
-      const bounds = mapInstance.getBounds();
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      onSearchAreaRef.current?.({
-        south: sw.getLat(),
-        west: sw.getLng(),
-        north: ne.getLat(),
-        east: ne.getLng(),
+      // 데스크톱 grid 및 모바일 뷰의 크기가 바뀌면 타일을 다시 그립니다.
+      if (typeof ResizeObserver !== 'undefined') {
+        resizeObserver = new ResizeObserver(() => {
+          scheduleRelayout();
+          if (!initialSearchDone) {
+            // 최초 로딩 중 크기가 0이었다면, 크기가 잡힌 후 한 번만 조회합니다.
+            requestAnimationFrame(searchInitialBoundsOnce);
+          }
+        });
+        resizeObserver.observe(mapContainerRef.current);
+      }
+
+      // 초기 화면을 한 번 배치한 다음에 실제 지도 크기를 기준으로 조회합니다.
+      initialFrame = requestAnimationFrame(() => {
+        initialFrame = requestAnimationFrame(() => {
+          initialFrame = null;
+          searchInitialBoundsOnce();
+        });
       });
 
       // 지도 빈 곳 클릭 시 마커를 생성하지 않습니다.
@@ -76,6 +123,9 @@ export default function MeetingMap({
 
     return () => {
       isMounted = false;
+      resizeObserver?.disconnect();
+      if (layoutFrame !== null) cancelAnimationFrame(layoutFrame);
+      if (initialFrame !== null) cancelAnimationFrame(initialFrame);
       if (markerRef.current) {
         markerRef.current.setMap(null);
         markerRef.current = null;
