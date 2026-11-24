@@ -1,5 +1,7 @@
 import { FiArrowUpRight, FiMapPin } from 'react-icons/fi';
+import { flushSync } from 'react-dom';
 import './PublicHomePage.css';
+import PublicAuthPanel from '../auth/PublicAuthPanel.jsx';
 
 const SAMPLE_MEETINGS = [
   {
@@ -235,10 +237,26 @@ export default function PublicHomePage({
   userName = '',
   onLogin,
   onSignup,
+  authMode,
+  onCloseAuth,
+  onAuthModeChange,
+  onFindId,
+  onFindPassword,
+  onLoginSuccess,
   onProfile,
   onExplore,
   onCreate,
 }) {
+  const transitionAuth = (change) => {
+    if (document.startViewTransition) {
+      document.startViewTransition(() => flushSync(change));
+    } else {
+      change();
+    }
+  };
+
+  const closeAuth = () => transitionAuth(onCloseAuth);
+
   return (
     <main className="public-home" id="top">
       <header className="site-header">
@@ -257,10 +275,10 @@ export default function PublicHomePage({
             </button>
           ) : (
             <>
-              <button className="site-login" onClick={onLogin}>
+              <button className="site-login" onClick={() => transitionAuth(onLogin)}>
                 로그인
               </button>
-              <button className="site-signup" onClick={onSignup}>
+              <button className="site-signup" onClick={() => transitionAuth(onSignup)}>
                 시작하기
               </button>
             </>
@@ -268,10 +286,20 @@ export default function PublicHomePage({
         </div>
       </header>
 
-      <section className="public-hero" aria-labelledby="hero-heading">
+      <section className={`public-hero${authMode ? ' public-hero-auth' : ''}`} aria-labelledby="hero-heading">
         <div className="hero-visual">
           <MoijaIllustration />
         </div>
+        {authMode && (
+          <PublicAuthPanel
+            mode={authMode}
+            onClose={closeAuth}
+            onModeChange={onAuthModeChange}
+            onFindId={onFindId}
+            onFindPassword={onFindPassword}
+            onLoginSuccess={onLoginSuccess}
+          />
+        )}
         <div className="hero-copy">
           <p className="hero-eyebrow">
             <span className="hero-eyebrow-dot" aria-hidden="true" />
@@ -301,7 +329,7 @@ export default function PublicHomePage({
         className="public-meetings"
         id="meetings"
         aria-labelledby="meetings-heading">
-        <div className="section-heading" id="interests">
+        {/* <div className="section-heading" id="interests">
           <div>
             <span className="section-kicker">TODAY'S PICK</span>
             <h2 id="meetings-heading">지금 함께할 모임</h2>
@@ -328,12 +356,12 @@ export default function PublicHomePage({
               </span>
             </button>
           ))}
-        </div>
+        </div> */}
       </section>
-      <footer className="public-footer">
+      {/* <footer className="public-footer">
         <span>모이자</span>
         <span>취향이 맞는 사람들의 번개 모임</span>
-      </footer>
+      </footer> */}
     </main>
   );
 }

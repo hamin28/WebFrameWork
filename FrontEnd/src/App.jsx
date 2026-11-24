@@ -20,6 +20,7 @@ import MyPage from './pages/MyPage/MyPage.jsx';
 
 export default function App() {
   const [screen, setScreen] = useState('public');
+  const [publicAuthMode, setPublicAuthMode] = useState(null);
   // 로그인 정보는 메모리에 보관하며 새로고침하면 초기화됩니다.
   const [loginInfo, setLoginInfo] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -33,6 +34,7 @@ export default function App() {
 
   const handleLoginSuccess = async (info) => {
     setLoginInfo(info);
+    setPublicAuthMode(null);
     if (sharedMeetingId) {
       try {
         const meeting = await getMeetingById(sharedMeetingId);
@@ -119,8 +121,14 @@ export default function App() {
       <PublicHomePage
         isLoggedIn={Boolean(loginInfo)}
         userName={loginInfo?.name}
-        onLogin={() => setScreen('login')}
-        onSignup={() => setScreen('signup')}
+        authMode={publicAuthMode}
+        onLogin={() => setPublicAuthMode('login')}
+        onSignup={() => setPublicAuthMode('signup')}
+        onCloseAuth={() => setPublicAuthMode(null)}
+        onAuthModeChange={setPublicAuthMode}
+        onFindId={() => setScreen('findId')}
+        onFindPassword={() => setScreen('findPassword')}
+        onLoginSuccess={handleLoginSuccess}
         onProfile={() => setScreen('mypage')}
         onExplore={() => setScreen(loginInfo ? 'home' : 'login')}
         onFavorites={() => setScreen(loginInfo ? 'fav' : 'login')}
@@ -131,11 +139,11 @@ export default function App() {
 
   // 로그인 페이지로 돌아가는 함수
   if (screen === 'findId') {
-    return <FindIdPage onBack={() => setScreen('login')} />;
+    return <FindIdPage onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
   }
 
   if (screen === 'findPassword') {
-    return <FindPasswordPage onBack={() => setScreen('login')} />;
+    return <FindPasswordPage onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
   }
 
   if (screen === 'signup') {

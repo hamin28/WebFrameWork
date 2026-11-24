@@ -515,3 +515,115 @@
     animation-iteration-count: 1;
   }
 }
+
+/* Keep the existing illustration and copy while the account form opens between them. */
+.public-hero.public-hero-auth {
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.15fr) minmax(
+      0,
+      0.95fr
+    );
+  gap: clamp(10px, 1.6vw, 24px);
+  align-items: stretch;
+  padding: 0 clamp(20px, 3vw, 44px) 34px;
+  overflow: visible;
+}
+.public-hero-auth .hero-visual {
+  grid-column: 1;
+  align-self: center;
+  max-width: 370px;
+}
+.public-hero-auth .hero-copy {
+  grid-column: 3;
+  align-self: center;
+  padding: 20px 0;
+}
+.public-hero-auth .hero-copy h1 {
+  font-size: clamp(27px, 2.7vw, 42px);
+}
+.public-hero-auth .hero-description {
+  font-size: 13px;
+}
+.public-hero-auth .hero-eyebrow {
+  font-size: 11px;
+}
+@media (max-width: 900px) and (min-width: 761px) {
+  .public-hero.public-hero-auth {
+    grid-template-columns: minmax(0, 0.7fr) minmax(330px, 1.35fr) minmax(
+        0,
+        0.8fr
+      );
+  }
+  .public-hero-auth .hero-copy h1 {
+    font-size: 26px;
+  }
+}
+@media (max-width: 760px) {
+  .public-hero.public-hero-auth {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 10px 12px 28px;
+  }
+  .public-hero-auth .hero-visual {
+    grid-column: 1;
+    grid-row: 1;
+    width: min(100%, 240px);
+  }
+  .public-hero-auth .hero-copy {
+    grid-column: 1;
+    grid-row: 3;
+    width: 100%;
+    padding: 20px 12px;
+  }
+}
+
+/* Move the existing image and headline into their home positions when the form closes. */
+.public-hero .hero-visual {
+  view-transition-name: public-home-art;
+}
+.public-hero .hero-copy {
+  view-transition-name: public-home-copy;
+}
+::view-transition-group(public-home-art),
+::view-transition-group(public-home-copy) {
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.22, 0.78, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(public-home-art),
+  ::view-transition-group(public-home-copy) {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* The center form appears after the original hero opens to either side. */
+::view-transition-new(public-home-form) {
+  animation: public-form-enter 0.75s cubic-bezier(0.2, 0.75, 0.25, 1) 0.08s both;
+}
+::view-transition-old(public-home-form) {
+  animation: public-form-exit 0.22s ease-in both;
+}
+@keyframes public-form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes public-form-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-new(public-home-form),
+  ::view-transition-old(public-home-form) {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
+}
