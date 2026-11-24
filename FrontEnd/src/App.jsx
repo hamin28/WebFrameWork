@@ -27,6 +27,7 @@ export default function App() {
   const [detailReturnScreen, setDetailReturnScreen] = useState('home');
   const [favoriteMeetings, setFavoriteMeetings] = useState([]);
   const [favoritesError, setFavoritesError] = useState('');
+  const [homeVersion, setHomeVersion] = useState(0);
   const sharedMeetingId = new URLSearchParams(window.location.search).get(
     'meetingId',
   );
@@ -142,23 +143,6 @@ export default function App() {
     return <SignupPage onBack={() => setScreen('public')} />;
   }
 
-  if (screen === 'create' && loginInfo) {
-    return (
-      <>
-        <CreateMeetingPage
-          onBack={() => setScreen('home')}
-          userName={loginInfo.name}
-          token={loginInfo.token}
-          selectedLocation={selectedLocation}
-        />
-        <BottomNavigation
-          activeTab="home"
-          onNavigate={handleBottomNavigation}
-        />
-      </>
-    );
-  }
-
   if (screen === 'mypage' && loginInfo) {
     return (
       <>
@@ -206,10 +190,11 @@ export default function App() {
     );
   }
 
-  if ((screen === 'home' || screen === 'fav') && loginInfo) {
+  if (['home', 'fav', 'create'].includes(screen) && loginInfo) {
     return (
       <>
         <HomePage
+          key={homeVersion}
           userName={loginInfo.name}
           token={loginInfo.token}
           onCreateTap={() => setScreen('create')}
@@ -229,6 +214,18 @@ export default function App() {
           activeTab={screen === 'fav' ? 'fav' : 'home'}
           onNavigate={handleBottomNavigation}
         />
+        {screen === 'create' && (
+          <CreateMeetingPage
+            onBack={() => setScreen('home')}
+            onCreated={() => {
+              setHomeVersion((version) => version + 1);
+              setScreen('home');
+            }}
+            userName={loginInfo.name}
+            token={loginInfo.token}
+            selectedLocation={selectedLocation}
+          />
+        )}
       </>
     );
   }
