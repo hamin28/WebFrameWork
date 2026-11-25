@@ -406,7 +406,7 @@
 @media (min-width: 900px) {
   .home-page {
     width: 100%;
-    height: 100%;
+    height: 100dvh;
     min-height: 0;
     margin: 0;
     border: 0;
@@ -444,7 +444,10 @@
 
   .home-content {
     display: grid;
+    flex: 1 1 0;
+    height: 0;
     grid-template-columns: minmax(0, 1fr) minmax(350px, 36%);
+    grid-template-rows: minmax(0, 1fr);
     gap: 20px;
     min-height: 0;
     margin: 0;
@@ -458,8 +461,8 @@
     inset: auto;
     min-width: 0;
     min-height: 0;
-    height: auto;
-    max-height: none;
+    height: 100%;
+    max-height: 100%;
     border: 1px solid #e8eaed;
     border-radius: 18px;
     background: #fff;
@@ -473,8 +476,9 @@
   .home-list-panel,
   .home-list-panel.expanded,
   .home-list-panel.hidden {
-    height: auto;
-    max-height: none;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
     padding: 20px 22px;
     transform: none;
     opacity: 1;
@@ -502,7 +506,9 @@
   }
 
   .home-meeting-list {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .home-meeting-card {
