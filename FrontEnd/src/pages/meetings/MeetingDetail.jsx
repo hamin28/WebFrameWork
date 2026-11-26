@@ -1,17 +1,42 @@
 // 목록에서 선택한 모임을 props로 받아 상세 정보를 표시합니다.
 import { useEffect, useState } from 'react';
-import { FiArrowLeft, FiCalendar, FiClock, FiHeart, FiImage, FiMapPin, FiShare2, FiUsers } from 'react-icons/fi';
 import {
+  FiArrowLeft,
+  FiCalendar,
+  FiClock,
+  FiHeart,
+  FiImage,
+  FiMapPin,
+  FiShare2,
+  FiTrash2,
+  FiUsers,
+} from 'react-icons/fi';
+import {
+  getMeetingImageUrl,
+  confirmMeeting,
+  deleteMeeting,
+  getMeetingById,
   getMeetingParticipation,
   joinMeeting,
   leaveMeeting,
 } from '../../api/meetings.js';
 import './MeetingDetail.css';
 
+const DETAIL_ICONS = {
+  back: FiArrowLeft,
+  share: FiShare2,
+  trash: FiTrash2,
+  heart: FiHeart,
+  pin: FiMapPin,
+  clock: FiClock,
+  people: FiUsers,
+  image: FiImage,
+  calendar: FiCalendar,
+};
+
 function DetailIcon({ name }) {
-  const icons = { back: FiArrowLeft, share: FiShare2, heart: FiHeart, pin: FiMapPin, clock: FiClock, people: FiUsers, image: FiImage, calendar: FiCalendar };
-  const IconComponent = icons[name];
-  return IconComponent ? <IconComponent aria-hidden="true" /> : null;
+  const Icon = DETAIL_ICONS[name];
+  return <Icon aria-hidden="true" />;
 }
 
 export default function MeetingDetail({
@@ -20,8 +45,16 @@ export default function MeetingDetail({
   token,
   isFavorite = false,
   onToggleFavorite,
+  onMeetingUpdate,
+  onMeetingDeleted,
 }) {
   const [notice, setNotice] = useState('');
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [announcementDraft, setAnnouncementDraft] = useState('');
+  const [confirmationSubmitting, setConfirmationSubmitting] = useState(false);
   const [participationLoading, setParticipationLoading] = useState(true);
   const [participationSubmitting, setParticipationSubmitting] = useState(false);
   const [participation, setParticipation] = useState({
@@ -29,20 +62,24 @@ export default function MeetingDetail({
     host: false,
     full: false,
     canJoin: true,
+    confirmed: meeting?.confirmed ?? false,
+    announcement: meeting?.announcement ?? '',
     currentMembers: meeting?.currentMembers ?? 0,
     maxMembers: meeting?.maxMembers ?? 0,
   });
   const participationButtonLabel = participationLoading
-    ? '참여 정보 확인 중…'
-    : participationSubmitting
-      ? '처리 중…'
+    ? '참가 상태 확인 중'
+    : participationSubmitting || confirmationSubmitting
+      ? '처리 중'
       : participation.host
-        ? '내가 만든 모임'
+        ? participation.confirmed ? '공지 확인' : '모임 확정'
         : participation.joined
-          ? '참여 취소하기'
-          : participation.full
-            ? '모집 마감'
+          ? '참가 취소'
+          : participation.confirmed || participation.full
+            ? '참가 마감'
             : '신청하기';
+  const showConfirmedParticipantActions =
+    participation.confirmed && participation.joined && !participation.host;
   const startsAt = meeting?.startsAt ?? meeting?.date;
   const distance = Number(meeting?.distance);
   const hasDistance = meeting?.distance != null && Number.isFinite(distance);
@@ -75,22 +112,59 @@ export default function MeetingDetail({
 
   const handleParticipation = async () => {
     if (!meeting?.id || !token || participationSubmitting) return;
-
+    if (!participation.joined && (participation.host || participation.full || participation.confirmed)) return;
     setParticipationSubmitting(true);
     try {
-      const result = participation.joined
-        ? await leaveMeeting(token, meeting.id)
-        : await joinMeeting(token, meeting.id);
-      setParticipation(result);
-      setNotice(
-        result.joined ? '모임 참여가 완료되었어요.' : '모임 참여를 취소했어요.',
-      );
+      const result = participation.joined ? await leaveMeeting(token, meeting.id) : await joinMeeting(token, meeting.id);
+      let updatedParticipation = result;
+      try {
+        const latestMeeting = await getMeetingById(meeting.id);
+        updatedParticipation = { ...result, currentMembers: latestMeeting.currentMembers ?? result.currentMembers, maxMembers: latestMeeting.maxMembers ?? result.maxMembers, confirmed: latestMeeting.confirmed ?? result.confirmed, announcement: latestMeeting.announcement ?? result.announcement };
+      } catch { /* Keep the participation response if refreshing the meeting fails. */ }
+      setParticipation((current) => ({ ...current, ...updatedParticipation }));
+      onMeetingUpdate?.(meeting.id, { currentMembers: updatedParticipation.currentMembers, maxMembers: updatedParticipation.maxMembers, confirmed: updatedParticipation.confirmed, announcement: updatedParticipation.announcement });
+      setNotice(updatedParticipation.joined ? '참가 신청이 완료됐어요.' : '참가 신청을 취소했어요.');
     } catch (error) {
-      setNotice(
-        error instanceof Error ? error.message : '모임 참여 처리에 실패했어요.',
-      );
+      setNotice(error instanceof Error ? error.message : '참가 요청을 처리하지 못했어요.');
+    } finally { setParticipationSubmitting(false); }
+  };
+
+  const handlePrimaryAction = () => {
+    if (participation.host) {
+      if (participation.confirmed) setAnnouncementModalOpen(true);
+      else { setAnnouncementDraft(''); setConfirmModalOpen(true); }
+      return;
+    }
+    if (participation.confirmed && participation.joined) setAnnouncementModalOpen(true);
+    else handleParticipation();
+  };
+
+  const handleConfirmMeeting = async (event) => {
+    event.preventDefault();
+    if (!meeting?.id || !token || !announcementDraft.trim() || confirmationSubmitting) return;
+    setConfirmationSubmitting(true);
+    try {
+      const result = await confirmMeeting(token, meeting.id, announcementDraft.trim());
+      const updates = { confirmed: true, announcement: result.announcement ?? announcementDraft.trim() };
+      setParticipation((current) => ({ ...current, ...updates }));
+      onMeetingUpdate?.(meeting.id, updates);
+      setConfirmModalOpen(false);
+      setNotice('모임이 확정되고 공지가 등록됐어요.');
+    } catch (error) { setNotice(error instanceof Error ? error.message : '모임 확정에 실패했어요.'); }
+    finally { setConfirmationSubmitting(false); }
+  };
+
+  const handleDeleteMeeting = async () => {
+    if (!meeting?.id || !token || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteMeeting(token, meeting.id);
+      setDeleteModalOpen(false);
+      onMeetingDeleted?.(meeting.id);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : '모임을 삭제하지 못했어요.');
     } finally {
-      setParticipationSubmitting(false);
+      setDeleting(false);
     }
   };
 
@@ -129,6 +203,15 @@ export default function MeetingDetail({
           <DetailIcon name="back" />
         </button>
         <h1>모임 상세</h1>
+        {meeting && participation.host && (
+          <button
+            type="button"
+            className="meeting-detail-delete"
+            aria-label="모임 삭제"
+            onClick={() => setDeleteModalOpen(true)}>
+            <DetailIcon name="trash" />
+          </button>
+        )}
         {meeting && (
           <button
             type="button"
@@ -167,17 +250,15 @@ export default function MeetingDetail({
       ) : (
         <>
           <main className="meeting-detail-main">
-            <div
-              className="meeting-detail-cover"
-              aria-label="모임 대표 이미지 준비 중">
-              <DetailIcon name="image" />
-              <span>모임 대표 이미지</span>
+            <div className={`meeting-detail-cover${(meeting.imageUrls?.[0] || meeting.representativeImageUrl) ? ' has-image' : ''}`} aria-label="모임 대표 이미지">
+              {(meeting.imageUrls?.[0] || meeting.representativeImageUrl) ? <img src={getMeetingImageUrl(meeting.imageUrls?.[0] || meeting.representativeImageUrl)} alt="모임 대표" /> : <><DetailIcon name="image" /><span>모임 대표 이미지</span></>}
             </div>
+            {meeting.imageUrls?.length > 1 && <div className="meeting-detail-gallery" aria-label="모임 추가 이미지">{meeting.imageUrls.slice(1).map((imageUrl,index)=><img key={imageUrl} src={getMeetingImageUrl(imageUrl)} alt={`모임 사진 ${index+2}`} />)}</div>}
             <div className="meeting-detail-content">
               <div className="meeting-detail-meta">
                 <span>{meeting.category ?? '카테고리 미정'}</span>
                 <span className="meeting-detail-status">
-                  {meeting.status ?? '모집중'}
+                  {participation.confirmed ? '참가 마감' : meeting.status ?? '모집 중'}
                 </span>
               </div>
               <h2>{meeting.title}</h2>
@@ -229,22 +310,71 @@ export default function MeetingDetail({
             </div>
           </main>
           <footer className="meeting-detail-actions">
-            <button
-              type="button"
-              disabled={
-                participationLoading ||
-                participationSubmitting ||
-                ((participation.host || participation.full) &&
-                  !participation.joined)
-              }
-              onClick={handleParticipation}>
-              {participationButtonLabel}
-            </button>
-            <p role="status">
-              {notice ||
-                `${participation.currentMembers ?? meeting.currentMembers ?? 0} / ${participation.maxMembers || meeting.maxMembers || '-'}명 참여 중`}
-            </p>
+            {showConfirmedParticipantActions ? (
+              <div className="meeting-detail-actions-split">
+                <button type="button" className="announcement-button" onClick={() => setAnnouncementModalOpen(true)}>공지 확인</button>
+                <button type="button" className="cancel-button" disabled={participationSubmitting} onClick={handleParticipation}>취소</button>
+              </div>
+            ) : (
+              <button type="button" disabled={participationLoading || participationSubmitting || confirmationSubmitting || (!participation.host && !participation.joined && (participation.full || participation.confirmed))} onClick={handlePrimaryAction}>{participationButtonLabel}</button>
+            )}
+            <p role="status">{notice || `${participation.currentMembers ?? meeting.currentMembers ?? 0} / ${participation.maxMembers || meeting.maxMembers || '-'}명 참여 중`}</p>
           </footer>
+          {confirmModalOpen && (
+            <div className="meeting-modal-backdrop" onClick={() => !confirmationSubmitting && setConfirmModalOpen(false)}>
+              <section className="meeting-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-meeting-title" onClick={(event) => event.stopPropagation()}>
+                <h2 id="confirm-meeting-title">모임 확정 및 공지 작성</h2>
+                <p>확정하면 새 참가 신청이 마감돼요. 참가 중인 사용자는 취소할 수 있어요.</p>
+                <form onSubmit={handleConfirmMeeting}>
+                  <textarea value={announcementDraft} onChange={(event) => setAnnouncementDraft(event.target.value)} maxLength={1000} placeholder="참가자에게 전달할 공지를 작성해 주세요." required />
+                  <div className="meeting-modal-actions">
+                    <button type="button" className="meeting-modal-secondary" disabled={confirmationSubmitting} onClick={() => setConfirmModalOpen(false)}>취소</button>
+                    <button type="submit" className="meeting-modal-primary" disabled={!announcementDraft.trim() || confirmationSubmitting}>{confirmationSubmitting ? '저장 중' : '확정하고 공지 저장'}</button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          )}
+          {announcementModalOpen && (
+            <div className="meeting-modal-backdrop" onClick={() => setAnnouncementModalOpen(false)}>
+              <section className="meeting-modal announcement-modal" role="dialog" aria-modal="true" aria-labelledby="meeting-announcement-title" onClick={(event) => event.stopPropagation()}>
+                <h2 id="meeting-announcement-title">모임 공지</h2>
+                <p className="meeting-announcement-text">{participation.announcement || meeting.announcement || '등록된 공지가 없습니다.'}</p>
+                <div className="meeting-modal-actions"><button type="button" className="meeting-modal-primary" onClick={() => setAnnouncementModalOpen(false)}>닫기</button></div>
+              </section>
+            </div>
+          )}
+          {deleteModalOpen && (
+            <div
+              className="meeting-modal-backdrop"
+              onClick={() => !deleting && setDeleteModalOpen(false)}>
+              <section
+                className="meeting-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-meeting-title"
+                onClick={(event) => event.stopPropagation()}>
+                <h2 id="delete-meeting-title">모임을 삭제할까요?</h2>
+                <p>모임과 참가 정보, 찜 목록이 삭제되고 등록한 사진 파일도 정리돼요. 삭제한 모임은 복구할 수 없어요.</p>
+                <div className="meeting-modal-actions">
+                  <button
+                    type="button"
+                    className="meeting-modal-secondary"
+                    disabled={deleting}
+                    onClick={() => setDeleteModalOpen(false)}>
+                    돌아가기
+                  </button>
+                  <button
+                    type="button"
+                    className="meeting-modal-danger"
+                    disabled={deleting}
+                    onClick={handleDeleteMeeting}>
+                    {deleting ? '삭제 중' : '모임 삭제'}
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
         </>
       )}
     </div>

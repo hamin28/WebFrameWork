@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiCalendar, FiChevronRight, FiImage, FiMapPin, FiUsers, FiUser, FiX } from 'react-icons/fi';
 import { getMyProfile, updateMyProfile } from '../../api/members.js';
-import { getMyMeetings } from '../../api/meetings.js';
+import { getMyMeetings, getJoinedMeetings, getMeetingImageUrl } from '../../api/meetings.js';
 import './MyPage.css';
 
 function MyPageIcon({ name, className = '' }) {
@@ -27,7 +27,9 @@ function MeetingCard({ meeting, status, onClick }) {
       </div>
       <div className="mypage-meeting-card-body">
         <span className="mypage-meeting-image" aria-hidden="true">
-          <MyPageIcon name="image" />
+          {meeting.imageUrls?.[0] || meeting.representativeImageUrl
+            ? <img src={getMeetingImageUrl(meeting.imageUrls?.[0] || meeting.representativeImageUrl)} alt="" loading="lazy" />
+            : <MyPageIcon name="image" />}
         </span>
         <span className="mypage-meeting-info">
           <span className="mypage-meeting-category">
@@ -59,7 +61,7 @@ export default function MyPage({
   address = '',
   introduction = '',
   interests = [],
-  joinedMeetings = [],
+  joinedMeetings: joinedFromProps = [],
   hostedMeetings: hostedFromProps = [],
   savedCount = 0,
   onOpenSaved,
@@ -83,6 +85,7 @@ export default function MyPage({
   });
   const [draftProfile, setDraftProfile] = useState(profile);
   const [hostedMeetings, setHostedMeetings] = useState(hostedFromProps);
+  const [joinedMeetings, setJoinedMeetings] = useState(joinedFromProps);
   const displayId = profile.userId ?? user?.userId ?? userId;
 
   const meetings = activity === 'joined' ? joinedMeetings : hostedMeetings;
@@ -124,6 +127,19 @@ export default function MyPage({
   }, [token, showNotice]);
 
   // 내가 만든 모임 불러오기
+  useEffect(() => {
+    if (!token) return undefined;
+    let active = true;
+    getJoinedMeetings(token)
+      .then((data) => {
+        if (active) setJoinedMeetings(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        if (active) showNotice(error instanceof Error ? error.message : '참여 중인 모임을 불러오지 못했어요.');
+      });
+    return () => { active = false; };
+  }, [token, showNotice]);
+
   useEffect(() => {
     if (!token) return undefined;
 

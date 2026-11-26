@@ -1,11 +1,63 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiRefreshCw } from 'react-icons/fi';
+import { FiMapPin, FiRefreshCw, FiTarget } from 'react-icons/fi';
 import { createCategoryMarkerImage } from './categoryMarker.js';
 import './MeetingMap.css';
 
+// 카카오 장소 분류 중 '지역'으로 취급할 것: 학교, 지하철역, 관광명소, 공공기관
+const REGION_CODES = ['SC4', 'SW8', 'AT4', 'PO3'];
+
+// 한 단어가 지역(주소/지명)이면 좌표를 돌려주고, 아니면 null
+function findRegion(word) {
+  const { services } = window.kakao.maps;
+
+  const byPlace = new Promise((resolve) => {
+    new services.Places().keywordSearch(word, (data, status) => {
+      if (
+        status === services.Status.OK &&
+        data.length > 0 &&
+        REGION_CODES.includes(data[0].category_group_code)
+      ) {
+        resolve({
+          latitude: Number(data[0].y),
+          longitude: Number(data[0].x),
+          places: data,
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+
+  const byAddress = new Promise((resolve) => {
+    new services.Geocoder().addressSearch(word, (data, status) => {
+      if (status === services.Status.OK && data.length > 0) {
+        resolve({
+          latitude: Number(data[0].y),
+          longitude: Number(data[0].x),
+          places: [],
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+
+  return Promise.all([byPlace, byAddress]).then(
+    ([place, address]) => place || address,
+  );
+}
+
+const DEFAULT_CENTER = Object.freeze({
+  latitude: 37.581789,
+  longitude: 127.010369,
+});
+
 export default function MeetingMap({
   meetings = [],
+  center = DEFAULT_CENTER,
+  initialLevel = 3,
   favoriteMeetingIds = [],
+  onViewportChange,
   onLocationSelect,
   onSearchArea,
   onMeetingSelect,
@@ -21,6 +73,10 @@ export default function MeetingMap({
 
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
+  const centerRef = useRef(center);
+  const lastAppliedCenterRef = useRef(null);
+  // 마지막으로 검색한 모임 키워드 ("이 지도에서 검색" 버튼이 같은 키워드를 유지)
+  const appliedKeywordRef = useRef('');
 
   const [keyword, setKeyword] = useState('');
   const [places, setPlaces] = useState([]);
@@ -28,15 +84,21 @@ export default function MeetingMap({
   const [selectedAddress, setSelectedAddress] = useState('');
 
   // 최신 콜백을 보관하여 지도 재생성 방지
+  const onViewportChangeRef = useRef(onViewportChange);
   const onLocationSelectRef = useRef(onLocationSelect);
   const onSearchAreaRef = useRef(onSearchArea);
   const onMeetingSelectRef = useRef(onMeetingSelect);
 
   useEffect(() => {
+    onViewportChangeRef.current = onViewportChange;
     onLocationSelectRef.current = onLocationSelect;
     onSearchAreaRef.current = onSearchArea;
     onMeetingSelectRef.current = onMeetingSelect;
-  }, [onLocationSelect, onSearchArea, onMeetingSelect]);
+  }, [onViewportChange, onLocationSelect, onSearchArea, onMeetingSelect]);
+
+  useEffect(() => {
+    centerRef.current = center;
+  }, [center]);
 
   // 1. 카카오 지도 최초 초기화
   useEffect(() => {
@@ -90,12 +152,16 @@ export default function MeetingMap({
       if (!isMounted || !mapContainerRef.current) return;
 
       const options = {
-        center: new window.kakao.maps.LatLng(37.581789, 127.010369),
-        level: 3,
+        center: new window.kakao.maps.LatLng(centerRef.current.latitude, centerRef.current.longitude),
+        level: Number.isFinite(Number(initialLevel)) ? Number(initialLevel) : 3,
       };
 
       mapInstance = new window.kakao.maps.Map(mapContainerRef.current, options);
       mapRef.current = mapInstance;
+      lastAppliedCenterRef.current = {
+        latitude: centerRef.current.latitude,
+        longitude: centerRef.current.longitude,
+      };
       setMap(mapInstance);
 
       // 데스크톱 grid 및 모바일 뷰의 크기가 바뀌면 타일을 다시 그립니다.
@@ -137,6 +203,60 @@ export default function MeetingMap({
     };
   }, []);
 
+  useEffect(() => {
+    if (!map || !center) return;
+
+    const latitude = Number(center.latitude);
+    const longitude = Number(center.longitude);
+    const lastAppliedCenter = lastAppliedCenterRef.current;
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      (lastAppliedCenter?.latitude === latitude &&
+        lastAppliedCenter?.longitude === longitude)
+    ) {
+      return;
+    }
+
+    lastAppliedCenterRef.current = { latitude, longitude };
+    appliedKeywordRef.current = '';
+    map.setLevel(3);
+    map.setCenter(
+      new window.kakao.maps.LatLng(latitude, longitude),
+    );
+    const handleMapIdle = () => {
+      window.kakao.maps.event.removeListener(map, 'idle', handleMapIdle);
+      const bounds = map.getBounds();
+      const southWest = bounds.getSouthWest();
+      const northEast = bounds.getNorthEast();
+      onSearchAreaRef.current?.({
+        south: southWest.getLat(),
+        west: southWest.getLng(),
+        north: northEast.getLat(),
+        east: northEast.getLng(),
+      });
+    };
+    window.kakao.maps.event.addListener(map, 'idle', handleMapIdle);
+  }, [map, center]);
+
+
+  useEffect(() => {
+    if (!map) return undefined;
+
+    const handleViewportIdle = () => {
+      const mapCenter = map.getCenter();
+      onViewportChangeRef.current?.({
+        latitude: mapCenter.getLat(),
+        longitude: mapCenter.getLng(),
+        level: map.getLevel(),
+      });
+    };
+
+    window.kakao.maps.event.addListener(map, 'idle', handleViewportIdle);
+    return () => {
+      window.kakao.maps.event.removeListener(map, 'idle', handleViewportIdle);
+    };
+  }, [map]);
   // 2. 지도 범위에 있는 모임의 마커를 생성합니다.
   // 찜에 포함된 모임만 빨간색이고, 그 외에는 파란색입니다.
   useEffect(() => {
@@ -147,7 +267,6 @@ export default function MeetingMap({
     meetingMarkersRef.current = [];
 
     const kakao = window.kakao;
-
     const favoriteIds = new Set(favoriteMeetingIds.map(String));
     const newMarkers = [];
 
@@ -182,32 +301,69 @@ export default function MeetingMap({
     };
   }, [map, meetings, favoriteMeetingIds]);
 
-  // 3. 장소 검색
-  const handleSearch = (e) => {
+  // 현재 지도 범위 + 키워드로 모임 조회를 요청합니다.
+  const requestSearch = (moreKeyword) => {
+    const bounds = map.getBounds();
+    const southWest = bounds.getSouthWest();
+    const northEast = bounds.getNorthEast();
+    appliedKeywordRef.current = moreKeyword;
+    onSearchAreaRef.current?.(
+      {
+        south: southWest.getLat(),
+        west: southWest.getLng(),
+        north: northEast.getLat(),
+        east: northEast.getLng(),
+      },
+      moreKeyword,
+    );
+  };
+
+  // 3. 통합 검색: "한성대 클라이밍" → 지역(한성대)으로 이동 + 키워드(클라이밍)로 모임 필터
+  const handleSearch = async (e) => {
     e.preventDefault();
 
-    if (!keyword.trim()) {
+    const words = keyword.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
       alert('검색어를 입력해 주세요!');
       return;
     }
 
-    if (!window.kakao?.maps?.services) {
+    if (!map || !window.kakao?.maps?.services) {
       alert('카카오 지도 라이브러리가 로드되지 않았습니다.');
       return;
     }
 
-    const ps = new window.kakao.maps.services.Places();
+    // 단어마다 지역인지 확인하고, 처음 지역으로 인식된 단어만 지역으로 씁니다.
+    const regions = await Promise.all(words.map(findRegion));
+    const regionIndex = regions.findIndex(Boolean);
+    const region = regionIndex >= 0 ? regions[regionIndex] : null;
+    const meetingWords = words
+      .filter((_, index) => index !== regionIndex)
+      .join(' ');
 
-    ps.keywordSearch(keyword, (data, status) => {
-      if (status === window.kakao.maps.services.Status.OK) {
-        setPlaces(data);
-      } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-        alert('검색 결과가 존재하지 않습니다.');
-        setPlaces([]);
-      } else {
-        alert('검색 중 오류가 발생했습니다.');
-      }
-    });
+    setPlaces(region?.places ?? []);
+
+    if (!region) {
+      // 지역을 못 찾으면 지도는 그대로 두고 키워드로만 찾습니다.
+      requestSearch(meetingWords);
+      return;
+    }
+
+    map.setLevel(3);
+    map.setCenter(
+      new window.kakao.maps.LatLng(region.latitude, region.longitude),
+    );
+
+    // 지도가 멈추면(idle) 그 범위로 조회합니다. idle이 안 올 때를 대비해 타이머도 둡니다.
+    let done = false;
+    const run = () => {
+      if (done) return;
+      done = true;
+      window.kakao.maps.event.removeListener(map, 'idle', run);
+      requestSearch(meetingWords);
+    };
+    window.kakao.maps.event.addListener(map, 'idle', run);
+    window.setTimeout(run, 700);
   };
 
   // 4. 검색 결과에서 장소 선택
@@ -256,12 +412,15 @@ export default function MeetingMap({
     const northEast = bounds.getNorthEast();
 
     // HomePage로 범위 전달
-    onSearchAreaRef.current?.({
-      south: southWest.getLat(),
-      west: southWest.getLng(),
-      north: northEast.getLat(),
-      east: northEast.getLng(),
-    });
+    onSearchAreaRef.current?.(
+      {
+        south: southWest.getLat(),
+        west: southWest.getLng(),
+        north: northEast.getLat(),
+        east: northEast.getLng(),
+      },
+      appliedKeywordRef.current,
+    );
   };
 
   return (
@@ -272,7 +431,7 @@ export default function MeetingMap({
           type="text"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          placeholder="건물명이나 상호명을 입력하세요 (예: 한성대학교)"
+          placeholder="예: 한성대 클라이밍"
           className="map-search-input"
         />
 
@@ -294,21 +453,23 @@ export default function MeetingMap({
           aria-busy={searching}>
           <FiRefreshCw aria-hidden="true" />
 
-          <span>{searching ? '검색 중…' : '현 지도에서 검색'}</span>
+          <span>{searching ? '검색 중…' : '이 지도에서 검색'}</span>
         </button>
       </div>
 
       {/* 선택된 장소 정보 */}
       {selectedPlace && (
         <div className="map-selection-info">
-          🎯 <strong>선택된 위치:</strong> {selectedPlace.place_name} (
+          <FiTarget aria-hidden="true" /> <strong>선택된 위치:</strong>{' '}
+          {selectedPlace.place_name} (
           {selectedPlace.road_address_name || selectedPlace.address_name})
         </div>
       )}
 
       {selectedAddress && (
         <div className="map-selection-info">
-          📍 <strong>선택한 주소:</strong> {selectedAddress}
+          <FiMapPin aria-hidden="true" /> <strong>선택한 주소:</strong>{' '}
+          {selectedAddress}
         </div>
       )}
 

@@ -18,36 +18,91 @@ import CreateMeetingPage from './pages/meetings/CreateMeetingPage.jsx';
 import MeetingDetail from './pages/meetings/MeetingDetail.jsx';
 import MyPage from './pages/MyPage/MyPage.jsx';
 
+const LOGIN_STORAGE_KEY = 'moyeo.web.loginInfo';
+
+function readStoredLoginInfo() {
+  try {
+    const stored = sessionStorage.getItem(LOGIN_STORAGE_KEY);
+    if (!stored) return null;
+    const loginInfo = JSON.parse(stored);
+    if (typeof loginInfo?.token !== 'string' || !loginInfo.token) {
+      sessionStorage.removeItem(LOGIN_STORAGE_KEY);
+      return null;
+    }
+    return loginInfo;
+  } catch {
+    return null;
+  }
+}
+
+function getSharedMeetingId() {
+  return new URLSearchParams(window.location.search).get('meetingId');
+}
+
+function clearSharedMeetingId() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('meetingId');
+  window.history.replaceState(window.history.state, '', url);
+}
+
 export default function App() {
-  const [screen, setScreen] = useState('public');
-  const [publicAuthMode, setPublicAuthMode] = useState(null);
-  // 로그인 정보는 메모리에 보관하며 새로고침하면 초기화됩니다.
-  const [loginInfo, setLoginInfo] = useState(null);
+  const [loginInfo, setLoginInfo] = useState(readStoredLoginInfo);
+  const [screen, setScreen] = useState(() =>
+    readStoredLoginInfo()
+      ? getSharedMeetingId() ? 'loadingShared' : 'home'
+      : 'public',
+  );
+  const [publicAuthMode, setPublicAuthMode] = useState(() =>
+    getSharedMeetingId() && !readStoredLoginInfo() ? 'login' : null,
+  );
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [detailReturnScreen, setDetailReturnScreen] = useState('home');
   const [favoriteMeetings, setFavoriteMeetings] = useState([]);
   const [favoritesError, setFavoritesError] = useState('');
   const [homeVersion, setHomeVersion] = useState(0);
-  const sharedMeetingId = new URLSearchParams(window.location.search).get(
-    'meetingId',
-  );
+  const sharedMeetingId = getSharedMeetingId();
 
-  const handleLoginSuccess = async (info) => {
-    setLoginInfo(info);
-    setPublicAuthMode(null);
-    if (sharedMeetingId) {
-      try {
-        const meeting = await getMeetingById(sharedMeetingId);
+  // 로그인 상태와 이름 변경을 현재 브라우저 탭에 보관합니다.
+  useEffect(() => {
+    try {
+      if (loginInfo?.token) {
+        sessionStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(loginInfo));
+      } else {
+        sessionStorage.removeItem(LOGIN_STORAGE_KEY);
+      }
+    } catch {
+      // 브라우저 저장소를 사용할 수 없어도 현재 화면의 로그인은 유지합니다.
+    }
+  }, [loginInfo]);
+
+  // 링크를 받은 사람이 로그인하면 모임 상세를 바로 엽니다.
+  // 이미 로그인한 탭에서 공유 URL을 새로 열어도 같은 방식으로 처리합니다.
+  useEffect(() => {
+    if (!loginInfo?.token || !sharedMeetingId) return undefined;
+    let active = true;
+
+    getMeetingById(sharedMeetingId)
+      .then((meeting) => {
+        if (!active) return;
         setSelectedMeeting(meeting);
         setDetailReturnScreen('home');
         setScreen('detail');
-        return;
-      } catch {
-        // 링크의 모임이 삭제되었거나 접근할 수 없으면 홈으로 진입합니다.
-      }
-    }
-    setScreen('home');
+        clearSharedMeetingId();
+      })
+      .catch(() => {
+        if (!active) return;
+        setScreen('home');
+        clearSharedMeetingId();
+      });
+
+    return () => { active = false; };
+  }, [loginInfo?.token, sharedMeetingId]);
+
+  const handleLoginSuccess = (info) => {
+    setLoginInfo(info);
+    setPublicAuthMode(null);
+    setScreen(sharedMeetingId ? 'loadingShared' : 'home');
   };
 
   useEffect(() => {
@@ -103,10 +158,19 @@ export default function App() {
         );
       } else {
         await addFavoriteMeeting(token, meeting.id);
+        // 오래된 상세 화면의 인원 수 대신 백엔드의 최신 모임 정보를 담습니다.
+        let latestMeeting = meeting;
+        try {
+          latestMeeting = { ...meeting, ...(await getMeetingById(meeting.id)) };
+        } catch {
+          // 찜 저장 자체는 성공했으므로 현재 모임 정보를 사용합니다.
+        }
         setFavoriteMeetings((current) =>
           current.some((saved) => saved.id === meeting.id)
-            ? current
-            : [meeting, ...current],
+            ? current.map((saved) =>
+                saved.id === meeting.id ? latestMeeting : saved,
+              )
+            : [latestMeeting, ...current],
         );
       }
     } catch (error) {
@@ -116,6 +180,10 @@ export default function App() {
       throw error;
     }
   };
+
+  if (screen === 'loadingShared') {
+    return <main role="status" style={{ padding: 32 }}>모임을 불러오는 중이에요…</main>;
+  }
 
   if (screen === 'public') {
     return (
@@ -169,6 +237,8 @@ export default function App() {
           }
           onLogout={() => {
             setLoginInfo(null);
+            try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* unavailable */ }
+            if (getSharedMeetingId()) clearSharedMeetingId();
             setFavoriteMeetings([]);
             setFavoritesError('');
             setScreen('public');
@@ -192,6 +262,23 @@ export default function App() {
             (meeting) => meeting.id === selectedMeeting?.id,
           )}
           onToggleFavorite={() => toggleFavorite(selectedMeeting)}
+          onMeetingUpdate={(meetingId, updates) => {
+            setSelectedMeeting((current) =>
+              current?.id === meetingId ? { ...current, ...updates } : current,
+            );
+            setFavoriteMeetings((current) =>
+              current.map((item) =>
+                item.id === meetingId ? { ...item, ...updates } : item,
+              ),
+            );
+          }}
+          onMeetingDeleted={(meetingId) => {
+            setSelectedMeeting(null);
+            setFavoriteMeetings((current) =>
+              current.filter((item) => item.id !== meetingId),
+            );
+            setScreen(detailReturnScreen);
+          }}
           onBack={() => setScreen(detailReturnScreen)}
         />
       </>

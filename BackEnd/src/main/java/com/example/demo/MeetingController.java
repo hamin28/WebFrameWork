@@ -21,7 +21,7 @@ public class MeetingController {
             @RequestHeader(value = "Authorization", required = false) String authorization,
             @RequestPart("meeting") CreateMeetingRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        Meeting saved = meetingService.createMeeting(request, currentMemberService.requireMember(authorization));
+        Meeting saved = meetingService.createMeeting(request, currentMemberService.requireMember(authorization), images);
         return Map.of("id", saved.getId());
     }
 
@@ -30,8 +30,9 @@ public class MeetingController {
             @RequestParam Double south,
             @RequestParam Double north,
             @RequestParam Double west,
-            @RequestParam Double east) {
-        return meetingService.findNearby(south, north, west, east);
+            @RequestParam Double east,
+            @RequestParam(required = false) String keyword) {
+        return meetingService.findNearby(south, north, west, east, keyword);
     }
 
     @GetMapping("/api/meetings/mine")
@@ -40,11 +41,32 @@ public class MeetingController {
         return meetingService.findMine(currentMemberService.requireMember(authorization));
     }
 
+    @GetMapping("/api/meetings/participating")
+    public List<MeetingResponse> participating(
+            @RequestHeader(value = "Authorization", required = false) String authorization) {
+        return meetingService.findParticipating(currentMemberService.requireMember(authorization));
+    }
+
     @GetMapping("/api/meetings/{meetingId}")
     public MeetingResponse getMeeting(@PathVariable Long meetingId) {
         return meetingService.getMeeting(meetingId);
     }
 
+    @DeleteMapping("/api/meetings/{meetingId}")
+    public void deleteMeeting(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long meetingId) {
+        meetingService.deleteMeeting(meetingId, currentMemberService.requireMember(authorization));
+    }
+
+    @PostMapping("/api/meetings/{meetingId}/confirm")
+    public MeetingResponse confirmMeeting(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long meetingId,
+            @RequestBody ConfirmMeetingRequest request) {
+        return meetingService.confirmMeeting(meetingId,
+                currentMemberService.requireMember(authorization), request.getAnnouncement());
+    }
     @GetMapping("/api/meetings/{meetingId}/participation")
     public MeetingParticipationResponse getParticipation(
             @RequestHeader(value = "Authorization", required = false) String authorization,

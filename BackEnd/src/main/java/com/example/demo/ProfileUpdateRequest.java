@@ -10,4 +10,7 @@ public class ProfileUpdateRequest {
     private String address;
     private String addressDetail;
     private String introduction;
+    private String mapLocationAddress;
+    private Double locationLatitude;
+    private Double locationLongitude;
 }

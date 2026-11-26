@@ -544,3 +544,23 @@
     width: min(360px, calc(100% - 80px));
   }
 }
+
+.home-meeting-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Map search stage: meeting order selector. */
+.home-sort-select {
++  min-height: 32px;
++  padding: 0 9px;
++  border: 1px solid #e5e7eb;
++  border-radius: 8px;
++  color: #555a60;
++  background: #fff;
++  font: inherit;
++  font-size: 11px;
++  cursor: pointer;
++}
++.home-sort-select:focus-visible {
++  outline: 2px solid var(--brand-focus, #5578d8);
++  outline-offset: 2px;
++}
++

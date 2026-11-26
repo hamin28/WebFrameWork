@@ -200,11 +200,11 @@ export default function CreateMeetingPage({
     const valid = selected.filter((file) =>
       ['image/jpeg', 'image/png'].includes(file.type) && file.size <= 10 * 1024 * 1024,
     );
-    const remaining = 5 - images.length;
+    const remaining = 3 - images.length;
     setImages((current) => [...current, ...valid.slice(0, remaining)]);
     setImageMessage(valid.length !== selected.length ?
       'JPG, PNG 파일만 선택할 수 있고, 파일당 최대 10MB입니다.' :
-      valid.length > remaining ? '사진은 최대 5장까지 선택할 수 있어요.' : '');
+      valid.length > remaining ? '사진은 최대 3장까지 선택할 수 있어요.' : '');
     event.target.value = '';
   }
 
@@ -240,6 +240,7 @@ export default function CreateMeetingPage({
           latitude: Number(location.latitude), longitude: Number(location.longitude),
           startsAt, maxMembers: count,
         },
+        images,
       });
       if (mounted.current) {
         if (onCreated) onCreated(result);
@@ -402,10 +403,10 @@ export default function CreateMeetingPage({
                     multiple hidden onChange={addImages} aria-label="모임 이미지 선택" />
                   <button type="button" className="cm-upload"
                     onClick={() => imageInput.current?.click()}
-                    disabled={isSubmitting || images.length >= 5}>
+                    disabled={isSubmitting || images.length >= 3}>
                     <Upload size={26} />
                     <strong>이미지를 선택하세요.</strong>
-                    <span>JPG, PNG · 장당 최대 10MB · 최대 5장</span>
+                    <span>JPG, PNG · 장당 최대 10MB · 최대 3장</span>
                   </button>
                   {images.length > 0 && (
                     <div className="cm-image-list">

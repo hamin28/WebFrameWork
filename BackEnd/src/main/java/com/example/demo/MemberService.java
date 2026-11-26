@@ -58,7 +58,10 @@ public class MemberService {
                 request.getName(),
                 request.getAddress(),
                 request.getAddressDetail(),
-                request.getIntroduction()
+                request.getIntroduction(),
+                request.getMapLocationAddress(),
+                request.getLocationLatitude(),
+                request.getLocationLongitude()
         );
         return memberRepository.save(member);
     }

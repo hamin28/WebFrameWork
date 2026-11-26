@@ -14,13 +14,18 @@ public class FavoriteService {
 
     private final FavoriteRepository favoriteRepository;
     private final MeetingRepository meetingRepository;
+    private final MeetingParticipantRepository participantRepository;
 
     @Transactional(readOnly = true)
     public List<MeetingResponse> getFavorites(Member member) {
         return favoriteRepository.findByMemberOrderByCreatedAtDesc(member)
                 .stream()
                 .map(Favorite::getMeeting)
-                .map(MeetingResponse::new)
+                .map(meeting -> new MeetingResponse(
+                        meeting,
+                        participantRepository.countByMeeting(meeting)
+                                + (meeting.getHost() == null ? 0 : 1)
+                ))
                 .toList();
     }
 

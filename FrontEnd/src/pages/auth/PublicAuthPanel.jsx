@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import './PublicAuthPanel.css';
 
-const emptyForm = { userId: '', name: '', phone: '', address: '', password: '', passwordConfirm: '' };
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+const emptyForm = { userId: '', name: '', email: '', phone: '', address: '', password: '', passwordConfirm: '' };
 
 export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId, onFindPassword, onLoginSuccess }) {
   const signup = mode === 'signup';
@@ -27,7 +29,7 @@ export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId,
     setBusy(true);
     setMessage('중복 확인 중입니다.');
     try {
-      const response = await fetch(`http://localhost:8080/api/check-userid?userId=${encodeURIComponent(userId)}`);
+      const response = await fetch(`${API_BASE_URL}/api/check-userid?userId=${encodeURIComponent(userId)}`);
       if (!response.ok) throw new Error('중복 확인 실패');
       const exists = await response.json();
       if (typeof exists !== 'boolean') throw new Error('응답 형식 오류');
@@ -52,6 +54,7 @@ export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId,
       if (!/^[A-Za-z0-9]{4,20}$/.test(userId)) return setMessage('아이디는 영문과 숫자 4~20자로 입력해 주세요.');
       if (duplicate.userId !== userId || duplicate.result !== 'available') return setMessage('아이디 중복 확인을 해 주세요.');
       if (!form.name.trim()) return setMessage('이름을 입력해 주세요.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return setMessage('이메일 주소를 확인해 주세요.');
       if (!/^0\d{8,10}$/.test(form.phone.replace(/[\s-]/g, ''))) return setMessage('전화번호를 확인해 주세요.');
       if (!form.address.trim()) return setMessage('주소를 입력해 주세요.');
       if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9\s])\S{8,}$/.test(form.password)) return setMessage('비밀번호는 영문, 숫자, 특수문자를 포함해 8자 이상 입력해 주세요.');
@@ -61,10 +64,10 @@ export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId,
     setBusy(true);
     setMessage(signup ? '회원가입 요청 중입니다.' : '로그인 요청 중입니다.');
     try {
-      const response = await fetch(`http://localhost:8080/api/${signup ? 'signup' : 'login'}`, {
+      const response = await fetch(`${API_BASE_URL}/api/${signup ? 'signup' : 'login'}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(signup ? { ...form, userId, email: '', phone: form.phone.replace(/[\s-]/g, '') } : { userId, password: form.password }),
+        body: JSON.stringify(signup ? { ...form, userId, email: form.email.trim(), phone: form.phone.replace(/[\s-]/g, '') } : { userId, password: form.password }),
       });
       if (!response.ok) {
         setMessage(signup ? '회원가입에 실패했습니다. 입력 내용을 확인해 주세요.' : '아이디 또는 비밀번호를 확인해 주세요.');
@@ -100,6 +103,7 @@ export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId,
           </div>
         </div>
         {signup && <>
+          <label className="public-auth-field">이메일<input name="email" type="email" value={form.email} onChange={update} autoComplete="email" placeholder="이메일을 입력해 주세요" /></label>
           <label className="public-auth-field">전화번호<input name="phone" type="tel" value={form.phone} onChange={update} autoComplete="tel" placeholder="전화번호를 입력해 주세요" /></label>
           <label className="public-auth-field">주소<input name="address" value={form.address} onChange={update} autoComplete="street-address" placeholder="주소를 입력해 주세요" /></label>
         </>}

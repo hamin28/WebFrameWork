@@ -2,12 +2,20 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 // 모임 등록
-export async function createMeeting({ token, meeting }) {
+export function getMeetingImageUrl(imageUrl) {
+  if (!imageUrl) return '';
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return `${API_BASE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+}
+
+export async function createMeeting({ token, meeting, images = [] }) {
   const formData = new FormData();
   formData.append(
     'meeting',
     new Blob([JSON.stringify(meeting)], { type: 'application/json' }),
   );
+
+  images.slice(0, 3).forEach((image) => formData.append('images', image));
 
   const response = await fetch(`${API_BASE_URL}/api/meetings`, {
     method: 'POST',
@@ -31,7 +39,7 @@ export async function createMeeting({ token, meeting }) {
 }
 
 // 목록 조회
-export async function getMeetings(token, { bounds, category, signal } = {}) {
+export async function getMeetings(token, { bounds, category, keyword, signal } = {}) {
   const params = new URLSearchParams();
   if (bounds) {
     for (const key of ['south', 'north', 'west', 'east']) {
@@ -39,6 +47,7 @@ export async function getMeetings(token, { bounds, category, signal } = {}) {
     }
   }
   if (category && category !== '전체') params.set('category', category);
+  if (keyword?.trim()) params.set('keyword', keyword.trim());
 
   const query = params.toString();
 
@@ -77,6 +86,19 @@ export async function getMyMeetings(token) {
 }
 
 // 공유 링크로 진입한 모임 상세 정보
+export async function getJoinedMeetings(token) {
+  const response = await fetch(`${API_BASE_URL}/api/meetings/participating`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`참여 예정 모임을 불러오지 못했습니다. (${response.status})`);
+  }
+
+  return response.json();
+}
+
+// 공유 링크로 진입한 모임 상세 정보
 export async function getMeetingById(meetingId) {
   const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`);
 
@@ -85,6 +107,30 @@ export async function getMeetingById(meetingId) {
   }
 
   return response.json();
+}
+
+export async function confirmMeeting(token, meetingId, announcement) {
+  const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}/confirm`, {
+    method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ announcement }),
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(result?.message || result?.detail || `모임 확정에 실패했어요. (${response.status})`);
+  return result;
+}
+
+export async function deleteMeeting(token, meetingId) {
+  const response = await fetch(`${API_BASE_URL}/api/meetings/${meetingId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(
+      result?.message || result?.detail || `모임 삭제에 실패했어요. (${response.status})`,
+    );
+  }
+  return result;
 }
 
 async function requestParticipation(token, meetingId, method = 'GET') {
