@@ -1,5 +1,6 @@
 // 목록에서 선택한 모임을 props로 받아 상세 정보를 표시합니다.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   FiArrowLeft,
   FiCalendar,
@@ -48,6 +49,7 @@ export default function MeetingDetail({
   onMeetingUpdate,
   onMeetingDeleted,
 }) {
+  const dialog = useRef(null);
   const [notice, setNotice] = useState('');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [announcementModalOpen, setAnnouncementModalOpen] = useState(false);
@@ -83,6 +85,17 @@ export default function MeetingDetail({
   const startsAt = meeting?.startsAt ?? meeting?.date;
   const distance = Number(meeting?.distance);
   const hasDistance = meeting?.distance != null && Number.isFinite(distance);
+
+  useEffect(() => {
+    const element = dialog.current;
+    const previousOverflow = document.body.style.overflow;
+    element.showModal();
+    document.body.style.overflow = 'hidden';
+    return () => {
+      if (element.open) element.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     if (!meeting?.id || !token) return undefined;
@@ -193,7 +206,26 @@ export default function MeetingDetail({
     }
   };
 
-  return (
+  return createPortal(
+    <dialog
+      ref={dialog}
+      className="meeting-detail-dialog"
+      aria-label="모임 상세"
+      onCancel={(event) => {
+        event.preventDefault();
+        if (deleteModalOpen) {
+          if (!deleting) setDeleteModalOpen(false);
+        } else if (confirmModalOpen) {
+          if (!confirmationSubmitting) setConfirmModalOpen(false);
+        } else if (announcementModalOpen) {
+          setAnnouncementModalOpen(false);
+        } else {
+          onBack();
+        }
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !confirmModalOpen && !announcementModalOpen && !deleteModalOpen) onBack();
+      }}>
     <div className="meeting-detail-page">
       <header className="meeting-detail-header">
         <button
@@ -378,5 +410,7 @@ export default function MeetingDetail({
         </>
       )}
     </div>
+    </dialog>,
+    document.body,
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FiArrowLeft, FiSearch } from 'react-icons/fi';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './Auth.css';
 import './SignupPage.css';
 
@@ -71,7 +72,7 @@ function formatPhoneNumber(value) {
   return `${digits.slice(0, areaLength)}-${digits.slice(areaLength, middleEnd)}-${digits.slice(middleEnd)}`;
 }
 
-export default function SignupPage({ onBack }) {
+export default function SignupPage({ onBack, onHome }) {
   // 초기값 & 상태 설정
 
   // 안내 메세지
@@ -271,6 +272,7 @@ export default function SignupPage({ onBack }) {
           <span>▮▮▮ · ▰</span>
         </div>
         <header className="signup-header">
+          <BrandHomeButton onClick={onHome} />
           <button
             className="signup-back"
             type="button"

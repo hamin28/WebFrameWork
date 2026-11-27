@@ -169,22 +169,21 @@
 }
 
 /* Desktop dialog inside the existing web home screen. */
-+@media (min-width: 700px) {
-+  .address-search-overlay {
-+    display: grid;
-+    place-items: center;
-+    padding: 24px;
-+    background: rgba(16, 25, 50, .45);
-+    backdrop-filter: blur(3px);
-+  }
-+  .address-search-page {
-+    width: min(100%, 540px);
-+    min-height: 0;
-+    height: min(680px, calc(100dvh - 48px));
-+    margin: 0;
-+    padding: 24px;
-+    border-radius: 18px;
-+    box-shadow: 0 24px 80px #10193240;
-+  }
-+}
-+
+@media (min-width: 700px) {
+  .address-search-overlay {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(16, 25, 50, .45);
+    backdrop-filter: blur(3px);
+  }
+  .address-search-page {
+    width: min(100%, 540px);
+    min-height: 0;
+    height: min(680px, calc(100dvh - 48px));
+    margin: 0;
+    padding: 24px;
+    border-radius: 18px;
+    box-shadow: 0 24px 80px #10193240;
+  }
+}

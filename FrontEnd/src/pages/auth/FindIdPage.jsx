@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { FiArrowLeft, FiUser } from 'react-icons/fi';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './Auth.css';
 import './AccountRecovery.css';
 
-export default function FindIdPage({ onBack }) {
+export default function FindIdPage({ onBack, onHome }) {
   const [message, setMessage] = useState('');
 
   function handleSubmit(event) {
@@ -39,6 +40,7 @@ export default function FindIdPage({ onBack }) {
           <span>▮▮▮ · ▰</span>
         </div>
         <header className="find-id-header">
+          <BrandHomeButton onClick={onHome} />
           {/* 기존 화면으로 돌아가는 버튼 */}
           <button
             className="find-id-back"

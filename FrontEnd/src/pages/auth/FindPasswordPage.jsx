@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { FiArrowLeft, FiLock } from 'react-icons/fi';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './Auth.css';
 import './AccountRecovery.css';
 
-export default function FindPasswordPage({ onBack }) {
+export default function FindPasswordPage({ onBack, onHome }) {
   const [message, setMessage] = useState('');
 
   function handleSubmit(event) {
@@ -44,6 +45,7 @@ export default function FindPasswordPage({ onBack }) {
           <span>▮▮▮ · ▰</span>
         </div>
         <header className="find-id-header">
+          <BrandHomeButton onClick={onHome} />
           <button
             className="find-id-back"
             type="button"

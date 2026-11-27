@@ -40,9 +40,10 @@
 }
 
 .mypage-header {
+  position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  padding: 16px 20px 0;
+  padding: 58px 20px 0;
   background: #fff;
 }
 
@@ -98,7 +99,7 @@
 .mypage-content {
   flex: 1 1 auto;
   min-height: 0;
-  padding-bottom: 104px;
+  padding-bottom: 24px;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -112,7 +113,10 @@
 }
 
 .mypage-profile-panel {
+  margin: 14px 16px 0;
   padding: 20px;
+  border: 1px solid #eceef0;
+  border-radius: 14px;
 }
 
 .mypage-profile-summary {
@@ -295,7 +299,6 @@
 }
 
 .mypage-profile-actions button:active,
-.mypage-utility-links button:active,
 .mypage-stats button:active {
   background: #f7f7f8;
 }
@@ -337,36 +340,50 @@
   white-space: nowrap;
 }
 
-.mypage-utility-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 20px;
-  margin-top: 8px;
-  padding: 15px 20px 18px;
+.mypage-footer {
+  flex: 0 0 auto;
+  border-top: 1px solid #e9ebee;
+  background: #f6f6f6;
 }
 
-.mypage-utility-links button {
-  display: inline-flex;
+.mypage-footer-inner {
+  display: flex;
+  min-height: 64px;
   align-items: center;
-  gap: 3px;
-  padding: 3px 0;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+}
+
+.mypage-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mypage-footer-links span {
+  width: 1px;
+  height: 11px;
+  background: #d8dade;
+}
+
+.mypage-footer button {
+  padding: 4px 0;
   border: 0;
-  color: #8c8f95;
+  color: #8b8e94;
   background: transparent;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.mypage-utility-links svg {
-  width: 13px;
-  height: 13px;
-  fill: none;
-  stroke: #b4b6ba;
-  stroke-width: 1.8;
-}
+.mypage-footer button:hover { color: #55585e; }
+.mypage-footer button:focus-visible { outline: 2px solid #d5ae2c; outline-offset: 3px; }
+.mypage-footer-logout { margin-left: auto; }
 
-.mypage-utility-links .mypage-logout {
-  color: #666970;
+.mypage-meetings-layout {
+  min-width: 0;
 }
 
 .mypage-meeting-summary {
@@ -620,7 +637,7 @@
   position: absolute;
   z-index: 30;
   right: 16px;
-  bottom: 92px;
+  bottom: 82px;
   left: 16px;
   width: fit-content;
   max-width: calc(100% - 32px);
@@ -819,3 +836,93 @@
 }
 
 .mypage-meeting-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Desktop layout follows the full-width home page instead of the phone frame. */
+@media (min-width: 900px) {
+  .my-page {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    background: #f6f7f9;
+  }
+
+  .mypage-header {
+    padding: 76px 32px 0;
+    border-bottom: 1px solid #e8eaed;
+  }
+  .mypage-eyebrow { font-size: 12px; }
+  .mypage-header h1 { margin-top: 6px; font-size: 28px; }
+  .mypage-tabs { width: min(360px, 100%); margin-top: 24px; border-bottom: 0; }
+  .mypage-tabs button { padding-bottom: 16px; font-size: 15px; }
+  .mypage-tabs button.is-active::after { right: 20px; left: 20px; background: #24251f; }
+
+  .mypage-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, .8fr);
+    align-content: start;
+    gap: 20px;
+    padding: 24px 32px 36px;
+    overflow-y: auto;
+  }
+  .mypage-panel {
+    min-width: 0;
+    border: 1px solid #e8eaed;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px #2530410a;
+  }
+  .mypage-profile-panel {
+    grid-column: 1 / -1;
+    width: min(100%, 860px);
+    justify-self: center;
+    margin: 0;
+    padding: 30px;
+  }
+  .mypage-avatar { width: 88px; height: 88px; }
+  .mypage-name-row h2 { font-size: 24px; }
+  .mypage-member-badge { padding: 5px 10px; font-size: 11px; }
+  .mypage-user-id, .mypage-address { font-size: 13px; }
+  .mypage-bio { margin-top: 26px; padding: 18px; border-radius: 10px; }
+  .mypage-bio h3, .mypage-interests h3 { font-size: 13px; }
+  .mypage-bio p, .mypage-interests > p { font-size: 14px; }
+  .mypage-interests { margin-top: 25px; }
+  .mypage-interest-empty, .mypage-interest-list span { font-size: 13px; }
+  .mypage-profile-actions { gap: 12px; margin-top: 25px; }
+  .mypage-profile-actions button { min-height: 46px; border-radius: 10px; font-size: 14px; }
+  .mypage-stats { margin-top: 20px; padding: 20px 0; border-radius: 12px; }
+  .mypage-stats strong { font-size: 23px; }
+  .mypage-stats span { font-size: 12px; }
+
+  .mypage-footer { background: #f6f7f9; }
+  .mypage-footer-inner { max-width: 1100px; min-height: 70px; margin: 0 auto; padding: 18px 32px; }
+  .mypage-footer button { font-size: 12px; }
+
+  .mypage-meetings-layout {
+    grid-column: 1 / -1;
+    width: min(100%, 860px);
+    justify-self: center;
+  }
+  .mypage-meeting-summary { margin: 0; padding: 24px 0; }
+  .mypage-meeting-summary strong { font-size: 24px; }
+  .mypage-meeting-summary span { font-size: 13px; }
+  .mypage-activity-tabs { width: min(360px, 100%); margin: 20px 0 0; }
+  .mypage-activity-tabs button { padding-bottom: 14px; font-size: 14px; }
+  .mypage-meetings-section { padding: 24px 0 0; }
+  .mypage-section-heading { margin: 0 0 16px; }
+  .mypage-section-heading h2 { font-size: 20px; }
+  .mypage-section-heading p { font-size: 13px; }
+  .mypage-meeting-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .mypage-meeting-card { padding: 18px; border-radius: 12px; }
+  .mypage-meeting-image { width: 76px; height: 76px; border-radius: 9px; }
+  .mypage-meeting-info strong { font-size: 15px; }
+  .mypage-meeting-category, .mypage-meeting-detail, .mypage-meeting-date { font-size: 12px; }
+  .mypage-meeting-status { font-size: 11px; }
+  .mypage-empty-state { min-height: 280px; }
+  .mypage-empty-state strong { font-size: 16px; }
+  .mypage-empty-state p { font-size: 13px; }
+  .mypage-toast { bottom: 86px; }
+}
+
+.mypage-brand-home { position: absolute; top: 17px; left: 20px; }
+@media (min-width: 900px) { .mypage-brand-home { top: 28px; left: 32px; } }

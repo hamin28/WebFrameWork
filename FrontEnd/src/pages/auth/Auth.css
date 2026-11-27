@@ -270,3 +270,5 @@ body {
     display: none;
   }
 }
+
+.auth-brand-home { position: absolute; z-index: 2; top: 55px; left: 22px; }

@@ -108,3 +108,5 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+.find-id-header .brand-home-button { margin-right: 4px; }

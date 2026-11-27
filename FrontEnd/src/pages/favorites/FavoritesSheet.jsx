@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { FiCalendar, FiChevronDown, FiFilter, FiHeart, FiImage, FiMapPin, FiUsers } from 'react-icons/fi';
+import { FiCalendar, FiChevronDown, FiFilter, FiHeart, FiImage, FiMapPin, FiUsers, FiX } from 'react-icons/fi';
 import { getMeetingImageUrl } from '../../api/meetings.js';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './FavoritesSheet.css';
 
 const CATEGORIES = ['전체', '운동', '카페', '맛집', '전시', '보드게임', '스터디', '기타'];
@@ -67,6 +68,7 @@ export default function FavoritesSheet({
   meetings = [],
   errorMessage = '',
   onClose,
+  onHome,
   onMeetingSelect,
   onToggleFavorite,
 }) {
@@ -110,6 +112,7 @@ export default function FavoritesSheet({
       </button>
 
       <header className="favorites-sheet-header">
+        <div className="favorites-brand-row"><BrandHomeButton onClick={onHome} /></div>
         <div className="favorites-sheet-heading">
           <div>
             <h2>찜한 모임 <span>{meetings.length}</span></h2>
@@ -142,6 +145,9 @@ export default function FavoritesSheet({
               onClick={() => setFilterOpen((open) => !open)}
             >
               <CardIcon name="filter" />필터
+            </button>
+            <button className="favorites-desktop-close" type="button" aria-label="찜 목록 닫기" onClick={onClose}>
+              <FiX aria-hidden="true" />
             </button>
           </div>
         </div>

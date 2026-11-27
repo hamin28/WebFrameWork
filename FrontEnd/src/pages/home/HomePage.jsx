@@ -2,18 +2,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FiBell,
+  FiHeart,
   FiChevronDown,
   FiChevronRight,
   FiClock,
   FiImage,
   FiMapPin,
   FiPlus,
+  FiUser,
 } from 'react-icons/fi';
 import { getMeetings, getMeetingImageUrl } from '../../api/meetings.js';
 import { getMyProfile, updateMyProfile } from '../../api/members.js';
 import MeetingMap from '../../components/map/MeetingMap.jsx';
 import FavoritesSheet from '../favorites/FavoritesSheet.jsx';
 import AddressSearch from './AddressSearch.jsx';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './HomePage.css';
 
 const CATEGORIES = [
@@ -192,6 +195,9 @@ export default function HomePage({
   userName,
   token,
   onCreateTap,
+  onOpenMyPage,
+  onOpenFavorites,
+  onHome,
   onLocationSelect,
   onMeetingSelect,
   favoritesOpen = false,
@@ -508,16 +514,19 @@ export default function HomePage({
     <div className="home-page">
       <header className="home-header">
         <div className="home-header-top">
-          <div>
-            <span className="home-location-caption">현재 위치 기준</span>
-            <button
-              className="home-location"
-              type="button"
-              onClick={() => setAddressSearchOpen(true)}>
-              <PinIcon />
-              {address}
-              <FiChevronDown className="home-chevron" aria-hidden="true" />
-            </button>
+          <div className="home-header-leading">
+            <BrandHomeButton onClick={onHome} />
+            <div className="home-location-block">
+              <span className="home-location-caption">현재 위치 기준</span>
+              <button
+                className="home-location"
+                type="button"
+                onClick={() => setAddressSearchOpen(true)}>
+                <PinIcon />
+                <span className="home-location-text">{address}</span>
+                <FiChevronDown className="home-chevron" aria-hidden="true" />
+              </button>
+            </div>
           </div>
           <div className="home-header-actions">
             <button aria-label="새 모임 만들기" onClick={onCreateTap}>
@@ -528,6 +537,21 @@ export default function HomePage({
               onClick={() => setNotice('아직 새로운 알림이 없어요.')}>
               <FiBell aria-hidden="true" />
               <i />
+            </button>
+            <button
+              type="button"
+              aria-label="찜한 모임"
+              title="찜한 모임"
+              aria-pressed={favoritesOpen}
+              onClick={onOpenFavorites}>
+              <FiHeart aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="마이페이지"
+              title="마이페이지"
+              onClick={onOpenMyPage}>
+              <FiUser aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -657,6 +681,7 @@ export default function HomePage({
           meetings={favoriteMeetings}
           errorMessage={favoritesError}
           onClose={onCloseFavorites}
+          onHome={onHome}
           onMeetingSelect={onMeetingSelect}
           onToggleFavorite={onToggleFavorite}
         />

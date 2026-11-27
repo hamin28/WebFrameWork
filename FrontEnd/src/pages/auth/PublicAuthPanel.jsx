@@ -92,7 +92,7 @@ export default function PublicAuthPanel({ mode, onClose, onModeChange, onFindId,
     <section className="public-auth-panel" aria-label={signup ? '회원가입' : '로그인'}>
       <button type="button" className="public-auth-back" onClick={onClose}>← 홈으로</button>
       <form className="public-auth-form" onSubmit={submit} noValidate>
-        <div className="public-auth-brand">모이자<span aria-hidden="true" /></div>
+        <div className="public-auth-brand">모여<span aria-hidden="true" /></div>
         <p className="public-auth-intro">{signup ? '취향 맞는 사람들과 가볍게 만나봐요.' : '아이디와 비밀번호로 로그인해 주세요.'}</p>
         {signup && <label className="public-auth-field">이름<input name="name" value={form.name} onChange={update} autoComplete="name" placeholder="이름을 입력해 주세요" /></label>}
         <div className="public-auth-field">

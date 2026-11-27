@@ -11,7 +11,6 @@ import LoginPage from './pages/auth/LoginPage.jsx';
 import FindIdPage from './pages/auth/FindIdPage.jsx';
 import FindPasswordPage from './pages/auth/FindPasswordPage.jsx';
 import SignupPage from './pages/auth/SignupPage.jsx';
-import BottomNavigation from './components/layout/BottomNavigation.jsx';
 import HomePage from './pages/home/HomePage.jsx';
 import PublicHomePage from './pages/home/PublicHomePage.jsx';
 import CreateMeetingPage from './pages/meetings/CreateMeetingPage.jsx';
@@ -99,6 +98,12 @@ export default function App() {
     return () => { active = false; };
   }, [loginInfo?.token, sharedMeetingId]);
 
+  const goHome = () => {
+    if (getSharedMeetingId()) clearSharedMeetingId();
+    setPublicAuthMode(null);
+    setScreen(loginInfo ? 'home' : 'public');
+  };
+
   const handleLoginSuccess = (info) => {
     setLoginInfo(info);
     setPublicAuthMode(null);
@@ -131,15 +136,6 @@ export default function App() {
       isCurrent = false;
     };
   }, [loginInfo?.token]);
-
-  const handleBottomNavigation = (tab) => {
-    if (tab === 'home' || tab === 'mypage' || tab === 'fav') {
-      setScreen(tab);
-      return true;
-    }
-
-    return false;
-  };
 
   const toggleFavorite = async (meeting) => {
     const token = loginInfo?.token;
@@ -198,6 +194,7 @@ export default function App() {
         onFindId={() => setScreen('findId')}
         onFindPassword={() => setScreen('findPassword')}
         onLoginSuccess={handleLoginSuccess}
+        onHome={goHome}
         onProfile={() => setScreen('mypage')}
         onExplore={() => setScreen(loginInfo ? 'home' : 'login')}
         onFavorites={() => setScreen(loginInfo ? 'fav' : 'login')}
@@ -208,15 +205,15 @@ export default function App() {
 
   // 로그인 페이지로 돌아가는 함수
   if (screen === 'findId') {
-    return <FindIdPage onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
+    return <FindIdPage onHome={goHome} onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
   }
 
   if (screen === 'findPassword') {
-    return <FindPasswordPage onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
+    return <FindPasswordPage onHome={goHome} onBack={() => { setPublicAuthMode('login'); setScreen('public'); }} />;
   }
 
   if (screen === 'signup') {
-    return <SignupPage onBack={() => setScreen('public')} />;
+    return <SignupPage onHome={goHome} onBack={() => setScreen('public')} />;
   }
 
   if (screen === 'mypage' && loginInfo) {
@@ -227,6 +224,7 @@ export default function App() {
           token={loginInfo.token}
           savedCount={favoriteMeetings.length}
           onOpenSaved={() => setScreen('fav')}
+          onBackHome={goHome}
           onMeetingSelect={(meeting) => {
             setSelectedMeeting(meeting);
             setDetailReturnScreen('mypage');
@@ -244,10 +242,6 @@ export default function App() {
             setScreen('public');
           }}
         />
-        <BottomNavigation
-          activeTab="mypage"
-          onNavigate={handleBottomNavigation}
-        />
       </>
     );
   }
@@ -255,6 +249,50 @@ export default function App() {
   if (screen === 'detail' && loginInfo) {
     return (
       <>
+        {detailReturnScreen === 'mypage' ? (
+          <MyPage
+            userName={loginInfo.name}
+            token={loginInfo.token}
+            savedCount={favoriteMeetings.length}
+            onOpenSaved={() => setScreen('fav')}
+            onBackHome={goHome}
+            onMeetingSelect={(meeting) => {
+              setSelectedMeeting(meeting);
+              setDetailReturnScreen('mypage');
+            }}
+            onNameChange={(name) =>
+              setLoginInfo((current) => ({ ...current, name }))
+            }
+            onLogout={() => {
+              setLoginInfo(null);
+              try { sessionStorage.removeItem(LOGIN_STORAGE_KEY); } catch { /* unavailable */ }
+              if (getSharedMeetingId()) clearSharedMeetingId();
+              setFavoriteMeetings([]);
+              setFavoritesError('');
+              setScreen('public');
+            }}
+          />
+        ) : (
+          <HomePage
+            key={homeVersion}
+            userName={loginInfo.name}
+            token={loginInfo.token}
+            onCreateTap={() => setScreen('create')}
+            onOpenMyPage={() => setScreen('mypage')}
+            onOpenFavorites={() => setScreen('fav')}
+            onHome={goHome}
+            onLocationSelect={setSelectedLocation}
+            onMeetingSelect={(meeting) => {
+              setSelectedMeeting(meeting);
+              setDetailReturnScreen(detailReturnScreen);
+            }}
+            favoritesOpen={detailReturnScreen === 'fav'}
+            favoriteMeetings={favoriteMeetings}
+            favoritesError={favoritesError}
+            onCloseFavorites={() => setScreen('home')}
+            onToggleFavorite={toggleFavorite}
+          />
+        )}
         <MeetingDetail
           meeting={selectedMeeting}
           token={loginInfo.token}
@@ -293,6 +331,9 @@ export default function App() {
           userName={loginInfo.name}
           token={loginInfo.token}
           onCreateTap={() => setScreen('create')}
+          onOpenMyPage={() => setScreen('mypage')}
+          onOpenFavorites={() => setScreen('fav')}
+          onHome={goHome}
           onLocationSelect={setSelectedLocation}
           onMeetingSelect={(meeting) => {
             setSelectedMeeting(meeting);
@@ -304,10 +345,6 @@ export default function App() {
           favoritesError={favoritesError}
           onCloseFavorites={() => setScreen('home')}
           onToggleFavorite={toggleFavorite}
-        />
-        <BottomNavigation
-          activeTab={screen === 'fav' ? 'fav' : 'home'}
-          onNavigate={handleBottomNavigation}
         />
         {screen === 'create' && (
           <CreateMeetingPage
@@ -327,6 +364,7 @@ export default function App() {
 
   return (
     <LoginPage
+      onHome={goHome}
       onBack={() => setScreen('public')}
       onLoginSuccess={handleLoginSuccess}
       onSignup={() => setScreen('signup')}

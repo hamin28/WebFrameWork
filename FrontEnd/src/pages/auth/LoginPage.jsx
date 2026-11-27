@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { FiMapPin } from 'react-icons/fi';
 import LoginInputField from '../../components/auth/LoginInputField.jsx';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './Auth.css';
 
 export default function LoginPage({
   onBack,
+  onHome,
   onFindId,
   onFindPassword,
   onSignup,
@@ -78,7 +80,7 @@ export default function LoginPage({
     <main className="login-page">
       {/* 데스크톱에서는 원본처럼 휴대전화 형태로 표시하는 영역입니다. */}
       <section className="login-phone" aria-label="모이자 로그인">
-        <button className="login-back" type="button" onClick={onBack}>← 메인으로</button>
+        <BrandHomeButton className="auth-brand-home" onClick={onHome ?? onBack} />
         <div className="login-status" aria-hidden="true">
           <span>9:41</span>
           <span>▮▮▮ · ▰</span>
@@ -93,7 +95,7 @@ export default function LoginPage({
             {/* 위치 아이콘을 마칩니다. */}
           </div>{' '}
           {/* 서비스 이름을 페이지 제목으로 표시합니다. */}
-          <h1>모이자</h1>
+          <h1>로그인</h1>
         </header>{' '}
         {/* 입력값을 제출하는 폼이며 입력을 수정하면 이전 안내를 지웁니다. */}
         <form

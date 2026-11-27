@@ -208,3 +208,5 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+.signup-header .brand-home-button { margin-right: 4px; }

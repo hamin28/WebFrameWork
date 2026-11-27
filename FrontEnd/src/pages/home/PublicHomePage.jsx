@@ -1,5 +1,6 @@
 import { FiArrowUpRight, FiMapPin } from 'react-icons/fi';
 import { flushSync } from 'react-dom';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './PublicHomePage.css';
 import PublicAuthPanel from '../auth/PublicAuthPanel.jsx';
 
@@ -243,6 +244,7 @@ export default function PublicHomePage({
   onFindId,
   onFindPassword,
   onLoginSuccess,
+  onHome,
   onProfile,
   onExplore,
   onCreate,
@@ -260,10 +262,7 @@ export default function PublicHomePage({
   return (
     <main className="public-home" id="top">
       <header className="site-header">
-        <a className="site-logo" href="#top" aria-label="모이자 홈">
-          모이자
-          <span className="site-logo-dot" aria-hidden="true" />
-        </a>
+        <BrandHomeButton className="site-logo" onClick={onHome} />
         <div className="site-header-actions">
           {isLoggedIn ? (
             <button

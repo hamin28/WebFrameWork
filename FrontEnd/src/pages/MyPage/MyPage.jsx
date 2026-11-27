@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FiCalendar, FiChevronRight, FiImage, FiMapPin, FiUsers, FiUser, FiX } from 'react-icons/fi';
 import { getMyProfile, updateMyProfile } from '../../api/members.js';
 import { getMyMeetings, getJoinedMeetings, getMeetingImageUrl } from '../../api/meetings.js';
+import BrandHomeButton from '../../components/layout/BrandHomeButton.jsx';
 import './MyPage.css';
 
 function MyPageIcon({ name, className = '' }) {
@@ -65,6 +66,7 @@ export default function MyPage({
   hostedMeetings: hostedFromProps = [],
   savedCount = 0,
   onOpenSaved,
+  onBackHome,
   onMeetingSelect,
   onLogout,
   onNameChange,
@@ -210,6 +212,7 @@ export default function MyPage({
   return (
     <div className="my-page">
       <header className="mypage-header">
+        <BrandHomeButton onClick={onBackHome} className="mypage-brand-home" />
         <p className="mypage-eyebrow">MY PAGE</p>
         <h1>마이페이지</h1>
         <nav className="mypage-tabs" aria-label="마이페이지 메뉴">
@@ -319,27 +322,9 @@ export default function MyPage({
               </div>
             </section>
 
-            <section className="mypage-panel mypage-utility-links">
-              <button
-                type="button"
-                onClick={() => showNotice('고객센터는 준비 중이에요.')}>
-                고객센터 <MyPageIcon name="arrow" />
-              </button>
-              <button
-                type="button"
-                onClick={() => showNotice('약관 및 정책은 준비 중이에요.')}>
-                약관 및 정책 <MyPageIcon name="arrow" />
-              </button>
-              <button
-                type="button"
-                className="mypage-logout"
-                onClick={onLogout}>
-                로그아웃
-              </button>
-            </section>
           </>
         ) : (
-          <>
+          <div className="mypage-meetings-layout">
             <section className="mypage-panel mypage-meeting-summary">
               <div>
                 <strong>{joinedMeetings.length}</strong>
@@ -412,9 +397,26 @@ export default function MyPage({
                 </div>
               )}
             </section>
-          </>
+          </div>
         )}
       </main>
+
+      <footer className="mypage-footer">
+        <div className="mypage-footer-inner">
+          <nav className="mypage-footer-links" aria-label="고객 지원 및 정책">
+            <button type="button" onClick={() => showNotice('고객센터는 준비 중이에요.')}>
+              고객센터
+            </button>
+            <span aria-hidden="true" />
+            <button type="button" onClick={() => showNotice('약관 및 정책은 준비 중이에요.')}>
+              약관 및 정책
+            </button>
+          </nav>
+          <button type="button" className="mypage-footer-logout" onClick={onLogout}>
+            로그아웃
+          </button>
+        </div>
+      </footer>
 
       {notice && (
         <div className="mypage-toast" role="status">
